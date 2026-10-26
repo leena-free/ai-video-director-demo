@@ -1,0 +1,3199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI 视频导演台 · 演示版</title>
+<meta name="description" content="面向示例品牌 CS 城市经理的本地 AI 视频提示词工具：把大白话转成口播脚本、分镜表和可直接投喂 AI 视频工具的提示词。" />
+<style>
+:root{
+  --ink:#0E1624;
+  --ink-2:#162134;
+  --ink-3:#223149;
+  --paper:#F5F3ED;
+  --paper-2:#EEEAE0;
+  --card:#FFFFFF;
+  --line:#E4DFD3;
+  --line-strong:#D3CCBC;
+  --text:#1B2430;
+  --muted:#6E7787;
+  --muted-2:#98A0AD;
+  --cyan:#0E8C93;
+  --cyan-2:#12B3B0;
+  --cyan-soft:#E4F5F4;
+  --red:#D93A2B;
+  --red-soft:#FBEAE7;
+  --amber:#B86B12;
+  --amber-soft:#FCF1DF;
+  --green:#1B7A48;
+  --green-soft:#E7F4EC;
+  --violet:#6B5BD2;
+  --violet-soft:#EFECFB;
+  --shadow-sm:0 1px 2px rgba(16,24,39,.05),0 4px 14px rgba(16,24,39,.04);
+  --shadow-md:0 10px 30px rgba(16,24,39,.08),0 2px 6px rgba(16,24,39,.04);
+  --shadow-lg:0 24px 60px rgba(16,24,39,.16);
+  --r-sm:8px;
+  --r-md:12px;
+  --r-lg:18px;
+  --r-xl:26px;
+  --font:"Microsoft YaHei","PingFang SC","Noto Sans SC","Source Han Sans SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Cascadia Code","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--font);color:var(--text);background:var(--paper);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button,input,select,textarea{font-family:inherit}
+button{cursor:pointer}
+a{color:var(--cyan);text-decoration:none}
+::selection{background:#CDEFEC;color:#0B3B3D}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#C9C2B4;border-radius:99px;border:3px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:80;height:64px;background:rgba(14,22,36,.96);
+  backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;gap:18px;padding:0 22px;color:#fff;
+}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand-mark{
+  width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#14B8B5,#0B6E75);
+  display:grid;place-items:center;font-weight:800;font-size:14px;letter-spacing:.5px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.15) inset,0 6px 18px rgba(20,184,181,.28);
+}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
+.brand-sub{font-size:11px;color:#9AA7BA;margin-top:2px;white-space:nowrap}
+.topbar .spacer{flex:1}
+.kb-status{
+  display:flex;align-items:center;gap:8px;font-size:12px;color:#C8D2E0;
+  padding:7px 11px;border:1px solid rgba(255,255,255,.12);border-radius:99px;background:rgba(255,255,255,.04);
+  white-space:nowrap;
+}
+.kb-dot{width:7px;height:7px;border-radius:50%;background:#F0A33A;box-shadow:0 0 0 3px rgba(240,163,58,.15)}
+.kb-dot.on{background:#31D0A0;box-shadow:0 0 0 3px rgba(49,208,160,.16)}
+.top-btn{
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#E8EDF5;
+  border-radius:9px;padding:8px 12px;font-size:12px;display:inline-flex;align-items:center;gap:7px;
+  transition:.18s ease;white-space:nowrap;
+}
+.top-btn:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.24)}
+.top-btn.primary{background:#fff;color:#111A28;border-color:#fff;font-weight:700}
+.top-btn.primary:hover{background:#EAF7F6;border-color:#EAF7F6}
+.top-btn svg{width:15px;height:15px;flex:none}
+
+/* ---------- Layout ---------- */
+.layout{
+  display:grid;grid-template-columns:392px minmax(0,1fr);
+  min-height:calc(100vh - 64px);align-items:start;
+}
+.composer{
+  position:sticky;top:64px;height:calc(100vh - 64px);overflow:auto;
+  background:#FBFAF6;border-right:1px solid var(--line);padding:24px 22px 40px;
+}
+.stage{padding:26px 30px 80px;min-width:0;max-width:1500px;width:100%;margin:0 auto}
+
+/* ---------- Composer ---------- */
+.eyebrow{
+  font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);
+  font-weight:800;display:flex;align-items:center;gap:8px;margin:0 0 10px;
+}
+.eyebrow .num{
+  width:20px;height:20px;border-radius:6px;background:var(--ink);color:#fff;
+  display:grid;place-items:center;font-size:10px;letter-spacing:0;
+}
+.composer h1{font-size:21px;line-height:1.35;margin:0 0 6px;letter-spacing:-.3px}
+.composer .lead{font-size:12px;line-height:1.7;color:var(--muted);margin:0 0 18px}
+.input-wrap{position:relative}
+textarea#idea{
+  width:100%;min-height:164px;resize:vertical;border:1px solid var(--line-strong);
+  background:#fff;border-radius:var(--r-md);padding:14px 14px 38px;font-size:13.5px;line-height:1.75;
+  color:var(--text);outline:none;box-shadow:var(--shadow-sm);transition:.2s ease;
+}
+textarea#idea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(14,140,147,.12),var(--shadow-sm)}
+textarea#idea::placeholder{color:#A6ADBA}
+.char-count{position:absolute;right:12px;bottom:10px;font-size:11px;color:var(--muted-2)}
+.examples{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 18px}
+.chip{
+  border:1px solid var(--line);background:#fff;color:#516073;border-radius:99px;
+  padding:6px 10px;font-size:11px;line-height:1;transition:.16s ease;
+}
+.chip:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-soft)}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field.wide{grid-column:1/-1}
+.field label{font-size:11px;color:var(--muted);font-weight:700}
+.field select,.field input{
+  width:100%;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;
+  color:var(--text);padding:0 9px;font-size:12px;outline:none;transition:.16s ease;
+}
+.field select:focus,.field input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(14,140,147,.1)}
+.switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 4px;padding:10px 11px;background:#fff;border:1px solid var(--line);border-radius:9px}
+.switch-row .txt{font-size:11px;line-height:1.5;color:var(--muted)}
+.switch-row .txt b{display:block;color:var(--text);font-size:12px;margin-bottom:1px}
+.switch{position:relative;width:38px;height:22px;flex:none}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.slider{position:absolute;inset:0;background:#D5D0C4;border-radius:99px;transition:.2s;cursor:pointer}
+.slider:before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch input:checked + .slider{background:var(--cyan)}
+.switch input:checked + .slider:before{transform:translateX(16px)}
+.generate{
+  width:100%;height:50px;border:0;border-radius:12px;margin-top:16px;
+  background:linear-gradient(135deg,#0E1624,#24344F);color:#fff;font-size:14px;font-weight:800;letter-spacing:.3px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 10px 24px rgba(16,24,39,.22);transition:.2s ease;
+}
+.generate:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(16,24,39,.28)}
+.generate:active{transform:translateY(0)}
+.generate:disabled{opacity:.55;cursor:wait;transform:none}
+.generate svg{width:18px;height:18px}
+.generate .kbd{font-size:10px;color:#A9B6C9;font-weight:500;margin-left:2px}
+.local-note{display:flex;gap:7px;align-items:flex-start;font-size:10.5px;line-height:1.6;color:var(--muted-2);margin-top:10px}
+.local-note svg{width:13px;height:13px;flex:none;margin-top:1px;color:var(--green)}
+.hr{height:1px;background:var(--line);margin:20px 0}
+
+/* ---------- Empty state ---------- */
+.empty{padding:60px 20px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.storyboard{display:flex;gap:10px;margin-bottom:30px;transform:rotate(-1.5deg)}
+.frame{
+  width:118px;height:150px;border-radius:12px;background:#fff;border:1px solid var(--line);
+  box-shadow:var(--shadow-md);padding:10px;position:relative;overflow:hidden;
+}
+.frame:nth-child(2){transform:translateY(-10px)}
+.frame:nth-child(3){transform:rotate(2deg)}
+.frame .sky{height:76px;border-radius:7px;background:linear-gradient(180deg,#DDF0EF,#F5E9D8);position:relative;overflow:hidden}
+.frame .sky:after{content:"";position:absolute;left:-15px;right:-15px;bottom:-22px;height:52px;border-radius:50%;background:#CBDDD8}
+.frame:nth-child(2) .sky{background:linear-gradient(180deg,#E7E3F7,#F7F1E5)}
+.frame:nth-child(3) .sky{background:linear-gradient(180deg,#F9E3D9,#F5EEE4)}
+.frame .bar{height:5px;border-radius:99px;background:#D9D4C8;margin-top:9px}
+.frame .bar.short{width:62%}
+.frame .tag{position:absolute;top:6px;left:6px;font-size:8px;font-weight:800;color:#fff;background:rgba(14,22,36,.72);padding:2px 5px;border-radius:3px}
+.empty h2{font-size:24px;margin:0 0 10px;letter-spacing:-.4px}
+.empty p{font-size:13px;line-height:1.8;color:var(--muted);max-width:520px;margin:0 0 24px}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:26px}
+.flow-item{font-size:11px;color:#4A5668;background:#fff;border:1px solid var(--line);border-radius:99px;padding:7px 12px;font-weight:700}
+.flow-arrow{color:#B8B2A5;font-size:12px}
+.capabilities{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:760px;width:100%}
+.cap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;text-align:left;box-shadow:var(--shadow-sm)}
+.cap .ico{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;margin-bottom:10px;background:var(--cyan-soft);color:var(--cyan)}
+.cap .ico svg{width:16px;height:16px}
+.cap b{display:block;font-size:12.5px;margin-bottom:4px}
+.cap span{font-size:11px;line-height:1.6;color:var(--muted)}
+
+/* ---------- Result header ---------- */
+.result{display:none}
+.result.show{display:block;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.result-head{
+  background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 24px;
+  box-shadow:var(--shadow-sm);margin-bottom:16px;position:relative;overflow:hidden;
+}
+.result-head:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--cyan),#E2B36A)}
+.result-kicker{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--cyan);font-weight:800;margin-bottom:7px}
+.result-title{font-size:25px;line-height:1.35;margin:0 0 8px;letter-spacing:-.5px}
+.result-sub{font-size:12.5px;color:var(--muted);line-height:1.7;margin:0;max-width:900px}
+.meta-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.meta{font-size:10.5px;color:#4E5B6E;background:#F4F2EC;border:1px solid #E9E4D8;border-radius:99px;padding:5px 9px;font-weight:700}
+.meta b{color:var(--ink);font-weight:800}
+.head-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.btn{
+  border:1px solid var(--line-strong);background:#fff;color:#334055;border-radius:9px;
+  padding:8px 12px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:7px;transition:.16s ease;
+}
+.btn:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-soft)}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.dark:hover{background:#223149;border-color:#223149;color:#fff}
+.btn svg{width:14px;height:14px}
+.btn.sm{padding:6px 9px;font-size:10.5px;border-radius:7px}
+.btn.sm svg{width:12px;height:12px}
+
+/* ---------- Tabs ---------- */
+.tabs{
+  display:flex;gap:2px;overflow:auto;padding:5px;background:#EDE9DF;border:1px solid #E2DCCE;
+  border-radius:12px;margin-bottom:16px;position:sticky;top:74px;z-index:40;
+}
+.tab{
+  flex:none;border:0;background:transparent;color:#5D6878;font-size:12px;font-weight:700;
+  padding:9px 13px;border-radius:8px;transition:.16s ease;white-space:nowrap;
+}
+.tab:hover{color:var(--ink);background:rgba(255,255,255,.55)}
+.tab.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(16,24,39,.12)}
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:.6}to{opacity:1}}
+
+/* ---------- Cards / sections ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 24px;box-shadow:var(--shadow-sm);margin-bottom:14px}
+.card-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.card-title h3{font-size:15px;margin:0;display:flex;align-items:center;gap:8px}
+.card-title h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan)}
+.card-title .hint{font-size:10.5px;color:var(--muted-2)}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.stat{background:#FAF9F5;border:1px solid #ECE8DD;border-radius:11px;padding:13px 14px;min-width:0}
+.stat .k{font-size:10px;color:var(--muted);font-weight:700;margin-bottom:6px;letter-spacing:.3px}
+.stat .v{font-size:14px;font-weight:800;line-height:1.35;color:var(--ink);word-break:break-word}
+.stat .v small{font-size:11px;font-weight:600;color:var(--muted)}
+.brief-line{font-size:14px;line-height:1.85;color:#293444;margin:0}
+.brief-line b{color:var(--ink);background:linear-gradient(transparent 62%,#D9F1EF 62%);padding:0 2px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;padding:4px 8px;border-radius:99px;letter-spacing:.2px}
+.pill.cyan{background:var(--cyan-soft);color:#0B6F75}
+.pill.amber{background:var(--amber-soft);color:var(--amber)}
+.pill.green{background:var(--green-soft);color:var(--green)}
+.pill.red{background:var(--red-soft);color:var(--red)}
+.pill.violet{background:var(--violet-soft);color:var(--violet)}
+.pill.gray{background:#F1EFE9;color:#66707E}
+
+/* ---------- Script ---------- */
+.script-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+.script-table th{text-align:left;font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:800;padding:8px 10px;border-bottom:1px solid var(--line)}
+.script-table td{padding:11px 10px;border-bottom:1px solid #F0ECE2;vertical-align:top;line-height:1.65}
+.script-table tr:last-child td{border-bottom:0}
+.script-table td.time{font-family:var(--mono);font-size:10.5px;color:var(--cyan);white-space:nowrap;font-weight:700}
+.script-table td.line{font-weight:600;color:#1F2A38}
+.script-table td.visual{color:var(--muted)}
+.script-table .silent{color:var(--muted-2);font-style:italic}
+.act-divider td{background:#F8F6F0;font-size:10px;font-weight:800;letter-spacing:1.2px;color:#687383;padding:7px 10px}
+.count-note{font-size:10.5px;color:var(--muted-2);margin-top:10px;display:flex;gap:6px;align-items:center}
+.count-note.warn{color:var(--amber)}
+.count-note.ok{color:var(--green)}
+
+/* ---------- Shot cards ---------- */
+.shot{background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.shot-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 15px;background:#FAF8F3;border-bottom:1px solid #EDE8DD}
+.shot-no{font-family:var(--mono);font-size:11px;font-weight:800;color:#fff;background:var(--ink);border-radius:6px;padding:4px 7px}
+.shot-time{font-family:var(--mono);font-size:11px;color:var(--cyan);font-weight:700}
+.shot-cam{font-size:11px;color:#465263;font-weight:700}
+.shot-head .spacer{flex:1}
+.shot-act{font-size:9.5px;font-weight:800;letter-spacing:.6px;padding:3px 7px;border-radius:99px;background:#EDE9DF;color:#5B6675}
+.shot-body{padding:14px 15px 15px}
+.shot-meta{display:grid;grid-template-columns:1.55fr 1fr;gap:12px;margin-bottom:12px}
+.shot-block{min-width:0}
+.shot-block .lbl{font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted-2);font-weight:800;margin-bottom:5px}
+.shot-block p{font-size:12px;line-height:1.7;margin:0;color:#2D3847}
+.shot-block p.line-text{font-weight:700;color:#17202C}
+.shot-block p.dim{color:var(--muted)}
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.mini{background:#FAF9F5;border:1px solid #EEEADF;border-radius:8px;padding:8px 9px}
+.mini .k{font-size:9px;color:var(--muted-2);font-weight:800;margin-bottom:3px;letter-spacing:.5px}
+.mini .v{font-size:10.5px;line-height:1.55;color:#475365}
+.prompt-wrap{border:1px solid #DCE8E7;border-radius:10px;overflow:hidden;margin-top:12px;background:#F4FAF9}
+.prompt-top{display:flex;align-items:center;gap:6px;padding:7px 9px;background:#E8F4F2;border-bottom:1px solid #D7E9E7}
+.prompt-top .pt{font-size:9.5px;font-weight:800;letter-spacing:.6px;color:#0B6F75}
+.prompt-top .spacer{flex:1}
+.prompt-tab{border:1px solid transparent;background:transparent;color:#55706F;font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:5px}
+.prompt-tab.active{background:#fff;color:#0B6F75;border-color:#CFE3E1}
+.prompt-box{padding:10px 11px;font-family:var(--mono);font-size:10.5px;line-height:1.7;color:#20302F;white-space:pre-wrap;word-break:break-word;max-height:190px;overflow:auto}
+.prompt-box.zh{font-family:var(--font);font-size:11.5px;line-height:1.8}
+.neg{padding:0 11px 10px;font-size:10px;line-height:1.6;color:#8A5A1A;background:#FCF8EE}
+.neg b{font-weight:800}
+.post-note{display:flex;gap:7px;align-items:flex-start;font-size:10px;line-height:1.55;color:#7A5A17;background:#FCF6E7;border:1px solid #F1E4C2;border-radius:7px;padding:7px 9px;margin-top:10px}
+.post-note svg{width:12px;height:12px;flex:none;margin-top:1px}
+
+/* ---------- Assets ---------- */
+.asset{background:#fff;border:1px solid var(--line);border-radius:13px;padding:16px 17px;margin-bottom:11px}
+.asset-head{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.avatar{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:12px;color:#fff;background:linear-gradient(145deg,#334A66,#0E1624);flex:none}
+.asset-head b{font-size:13px}
+.asset-head .role{font-size:10px;color:var(--muted);display:block;font-weight:600;margin-top:1px}
+.asset p{font-size:11.5px;line-height:1.75;color:#3B4656;margin:0 0 9px}
+.asset .en{font-family:var(--mono);font-size:10px;line-height:1.65;color:#536070;background:#F7F6F1;border-radius:8px;padding:9px 10px;max-height:130px;overflow:auto}
+.asset-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.checklist{list-style:none;padding:0;margin:0}
+.checklist li{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #F0ECE2;font-size:11.5px;line-height:1.6;color:#3B4656}
+.checklist li:last-child{border-bottom:0}
+.checklist .ck{width:18px;height:18px;border-radius:6px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;flex:none;font-size:10px;font-weight:900;margin-top:1px}
+
+/* ---------- Publish ---------- */
+.title-item{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid #F0ECE2}
+.title-item:last-child{border-bottom:0}
+.title-item .idx{font-family:var(--mono);font-size:10px;color:var(--muted-2);width:18px;flex:none;padding-top:2px}
+.title-item .txt{flex:1;font-size:13px;font-weight:700;line-height:1.55;color:#1F2A38}
+.title-item .len{font-size:10px;color:var(--muted-2);white-space:nowrap;padding-top:3px}
+.title-item .copy-mini{border:0;background:#F3F1EB;color:#5A6575;border-radius:6px;width:25px;height:25px;display:grid;place-items:center;flex:none}
+.title-item .copy-mini:hover{background:var(--cyan-soft);color:var(--cyan)}
+.title-item .copy-mini svg{width:12px;height:12px}
+.hashtags{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.hashtag{background:#EFF7F6;border:1px solid #D6EBE9;color:#0B6F75;border-radius:99px;padding:5px 9px;font-size:10.5px;font-weight:700}
+.cover-preview{background:linear-gradient(150deg,#0E1624,#263A55);border-radius:12px;padding:22px;color:#fff;position:relative;overflow:hidden;min-height:150px;display:flex;flex-direction:column;justify-content:center}
+.cover-preview:before{content:"";position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(20,184,181,.32),transparent 68%);right:-50px;top:-60px}
+.cover-preview .big{font-size:25px;font-weight:900;line-height:1.3;letter-spacing:-.4px;position:relative;z-index:1}
+.cover-preview .small{font-size:11px;color:#B9C7D8;margin-top:8px;position:relative;z-index:1}
+.cover-preview .tagx{font-size:9px;letter-spacing:1.5px;color:#5EE0D8;font-weight:800;margin-bottom:7px;position:relative;z-index:1}
+
+/* ---------- Compliance ---------- */
+.check-row{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid #F0ECE2}
+.check-row:last-child{border-bottom:0}
+.check-ico{width:21px;height:21px;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:900;flex:none;margin-top:1px}
+.check-ico.ok{background:var(--green-soft);color:var(--green)}
+.check-ico.warn{background:var(--amber-soft);color:var(--amber)}
+.check-ico.err{background:var(--red-soft);color:var(--red)}
+.check-body{flex:1;min-width:0}
+.check-body b{font-size:11.5px;display:block;margin-bottom:2px}
+.check-body p{font-size:10.5px;line-height:1.6;color:var(--muted);margin:0}
+.check-body code{font-family:var(--mono);font-size:10px;background:#F5F3ED;padding:1px 4px;border-radius:3px}
+.score-card{display:flex;align-items:center;gap:16px;background:#FAF9F5;border:1px solid #ECE8DD;border-radius:12px;padding:15px 16px;margin-bottom:12px}
+.score-ring{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:18px;font-weight:900;color:var(--ink);background:conic-gradient(var(--green) calc(var(--score)*1%),#E5E0D4 0);position:relative;flex:none}
+.score-ring:after{content:"";position:absolute;inset:6px;border-radius:50%;background:#FAF9F5}
+.score-ring span{position:relative;z-index:1}
+.score-copy b{font-size:13px;display:block;margin-bottom:3px}
+.score-copy p{font-size:11px;line-height:1.6;color:var(--muted);margin:0}
+
+/* ---------- Knowledge ---------- */
+.kb-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.kb-stat{background:#FAF9F5;border:1px solid #ECE8DD;border-radius:10px;padding:11px 12px}
+.kb-stat .k{font-size:9.5px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.kb-stat .v{font-size:16px;font-weight:900;color:var(--ink)}
+.kb-stat .v small{font-size:10px;color:var(--muted);font-weight:600}
+.source-list{list-style:none;padding:0;margin:0}
+.source-list li{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #F0ECE2;font-size:10.5px;line-height:1.55;color:#4B5666}
+.source-list li:last-child{border-bottom:0}
+.source-list .fi{color:var(--cyan);font-family:var(--mono);font-size:9.5px;flex:none;padding-top:1px}
+.excerpt{background:#F8F6F0;border-left:3px solid var(--cyan);border-radius:0 7px 7px 0;padding:9px 11px;margin:8px 0;font-size:10.5px;line-height:1.7;color:#4A5565}
+.excerpt b{display:block;font-size:9px;color:var(--cyan);margin-bottom:3px;letter-spacing:.5px}
+.dropzone{border:1.5px dashed #C9C2B3;border-radius:12px;padding:24px;text-align:center;background:#FBFAF6;transition:.18s ease;cursor:pointer}
+.dropzone:hover,.dropzone.drag{border-color:var(--cyan);background:var(--cyan-soft)}
+.dropzone b{display:block;font-size:12.5px;margin-bottom:4px}
+.dropzone span{font-size:10.5px;color:var(--muted);line-height:1.6}
+.alert{display:flex;gap:9px;align-items:flex-start;border-radius:9px;padding:10px 12px;font-size:10.5px;line-height:1.65;margin:10px 0}
+.alert.warn{background:var(--amber-soft);border:1px solid #F0DEBC;color:#7B5218}
+.alert.info{background:#EDF5FA;border:1px solid #D5E6F0;color:#315A76}
+.alert.err{background:var(--red-soft);border:1px solid #F2D2CC;color:#8B2C20}
+.alert b{font-weight:800}
+
+/* ---------- Modal / toast ---------- */
+.modal-back{position:fixed;inset:0;background:rgba(10,16,26,.5);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-back.show{display:flex}
+.modal{background:#fff;border-radius:18px;width:min(640px,100%);max-height:82vh;overflow:auto;box-shadow:var(--shadow-lg);padding:22px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.modal-head h3{margin:0;font-size:16px}
+.modal-close{border:0;background:#F3F1EB;border-radius:7px;width:29px;height:29px;font-size:16px;color:#5B6575}
+.project-row{display:flex;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #F0ECE2}
+.project-row:last-child{border-bottom:0}
+.project-row .info{flex:1;min-width:0}
+.project-row b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.project-row span{font-size:10px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#111A28;color:#fff;font-size:12px;padding:10px 16px;border-radius:10px;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:.25s ease;z-index:300;display:flex;align-items:center;gap:8px;max-width:90vw}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast svg{width:15px;height:15px;color:#5EE0D8}
+
+/* ---------- Misc ---------- */
+.muted{color:var(--muted)}
+.tiny{font-size:10px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.flex{display:flex;align-items:center;gap:8px}
+.flex-wrap{flex-wrap:wrap}
+.right{margin-left:auto}
+.hidden{display:none!important}
+kbd{font-family:var(--mono);font-size:9px;background:#F0EDE5;border:1px solid #DDD6C7;border-bottom-width:2px;border-radius:4px;padding:1px 4px;color:#5A6474}
+
+@media (max-width:1180px){
+  .layout{grid-template-columns:350px minmax(0,1fr)}
+  .stage{padding:22px 20px 70px}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:900px){
+  .topbar{height:58px;padding:0 14px;gap:10px}
+  .brand-sub{display:none}
+  .kb-status{display:none}
+  .layout{display:block}
+  .composer{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:20px 16px 26px}
+  .stage{padding:18px 14px 60px}
+  .tabs{top:62px}
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .grid-2,.shot-meta,.mini-grid{grid-template-columns:1fr}
+  .capabilities{grid-template-columns:1fr}
+  .kb-stats{grid-template-columns:1fr 1fr}
+  .storyboard{transform:scale(.82);transform-origin:center;margin-bottom:12px}
+}
+@media print{
+  .topbar,.composer,.tabs,.head-actions,.toast,.modal-back{display:none!important}
+  .layout{display:block}
+  .stage{padding:0;max-width:none}
+  .result{display:block!important}
+  .panel{display:block!important;break-before:page}
+  .panel:first-child{break-before:auto}
+  .card,.shot,.asset{box-shadow:none;break-inside:avoid}
+  body{background:#fff}
+  .prompt-box{max-height:none}
+}
+</style>
+</head><body>
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">演示</div>
+    <div>
+      <div class="brand-name">AI 视频导演台</div>
+      <div class="brand-sub">演示版 · 数据为示例 · 自然语言转分镜提示词</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <button class="kb-status" id="kbStatusBtn" title="查看知识库状态">
+    <span class="kb-dot" id="kbDot"></span>
+    <span id="kbStatusText">内置知识库 · 建议导入本地</span>
+  </button>
+  <button class="top-btn" id="importKbBtn" title="导入本地知识库知识库文件夹">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5v7A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-9Z"/><path d="M12 11v5m0-5-2 2m2-2 2 2"/></svg>
+    导入知识库
+  </button>
+  <button class="top-btn" id="projectsBtn" title="打开已保存项目">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H10l2 2h5.5A2.5 2.5 0 0 1 20 8.5v9A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-11Z"/></svg>
+    我的项目
+  </button>
+  <button class="top-btn primary" id="helpBtn" title="使用说明">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8v.2"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>
+    使用说明
+  </button>
+</div>
+
+<div class="layout">
+  <aside class="composer">
+    <div class="eyebrow"><span class="num">01</span> 说人话</div>
+    <h1>把大白话，变成 AI 视频提示词</h1>
+    <p class="lead">不用懂 Prompt，不用会分镜。把你想拍的事、想给谁看、想让他做什么，像跟同事聊天一样写下来。</p>
+    <div class="input-wrap">
+      <textarea id="idea" placeholder="例：我们这边很多单店老板，一个人守店，技术不错但店里没客人。想拍一条真实、走心的视频，告诉他加入示例品牌后，线上能带来订单。60秒，发抖音。"></textarea>
+      <span class="char-count" id="ideaCount">0 字</span>
+    </div>
+    <div class="examples" id="exampleChips">
+      <button class="chip" data-example="0">单店老板 · 没客流</button>
+      <button class="chip" data-example="1">同行对比 · 算账</button>
+      <button class="chip" data-example="2">清灰科普 · 专业</button>
+      <button class="chip" data-example="3">多店老板 · 管不过来</button>
+      <button class="chip" data-example="4">CS 口播 · 30秒</button>
+    </div>
+
+    <div class="hr"></div>
+    <div class="eyebrow"><span class="num">02</span> 定方向 <span style="font-weight:500;letter-spacing:0;color:#98A0AD;text-transform:none;font-size:10px;margin-left:4px">不确定就选自动</span></div>
+    <div class="field-grid">
+      <div class="field">
+        <label for="fAudience">目标人群</label>
+        <select id="fAudience">
+          <option value="auto">自动判断</option>
+          <option value="single">单店老板</option>
+          <option value="master">维修师傅</option>
+          <option value="cross">跨界转型</option>
+          <option value="multi">多店老板</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fArchetype">叙事模型</label>
+        <select id="fArchetype">
+          <option value="auto">自动判断</option>
+          <option value="dilemma">困境共鸣</option>
+          <option value="mismatch">错位擦肩</option>
+          <option value="comparison">同行对比</option>
+          <option value="science">科普解误区</option>
+          <option value="direct">口播直给</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fStyle">画面风格</label>
+        <select id="fStyle">
+          <option value="real">写实电影感</option>
+          <option value="anim3d">3D 动画电影风（原创）</option>
+          <option value="docu">纪实手持 UGC</option>
+          <option value="science">三维原理演示</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fDuration">视频时长</label>
+        <select id="fDuration">
+          <option value="30">30 秒 · 强钩子</option>
+          <option value="45">45 秒 · 快节奏</option>
+          <option value="60" selected>60 秒 · 标准</option>
+          <option value="90">90 秒 · 深度</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fPlatform">发布平台</label>
+        <select id="fPlatform">
+          <option value="douyin">抖音</option>
+          <option value="channels">视频号</option>
+          <option value="xhs">小红书</option>
+          <option value="kuaishou">快手</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fHero">主角设定</label>
+        <select id="fHero">
+          <option value="hero">老王 · 42岁男老板</option>
+          <option value="heroine">李姐 · 38岁女老板</option>
+          <option value="young">小陈 · 27岁维修师傅</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fCity">城市（可选）</label>
+        <input id="fCity" type="text" placeholder="如：武汉" maxlength="12" />
+      </div>
+      <div class="field">
+        <label for="fShop">门店名（可选）</label>
+        <input id="fShop" type="text" placeholder="不填用「社区维修店」" maxlength="20" />
+      </div>
+    </div>
+
+    <div class="switch-row">
+      <div class="txt"><b>已有角色参考图</b>开启后，分镜提示词会要求 @图1 严格保持一致</div>
+      <label class="switch"><input type="checkbox" id="fRef" /><span class="slider"></span></label>
+    </div>
+
+    <button class="generate" id="generateBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 1.7 4.6L18 9.3l-4.3 1.7L12 15.6l-1.7-4.6L6 9.3l4.3-1.7L12 3Z"/><path d="m18.5 15 .9 2.4 2.1.9-2.1.9-.9 2.4-.9-2.4-2.1-.9 2.1-.9.9-2.4Z"/></svg>
+      生成分镜与提示词 <span class="kbd">Ctrl ↵</span>
+    </button>
+    <div class="local-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4.5 6v5.2c0 4.6 3.2 8.1 7.5 9.8 4.3-1.7 7.5-5.2 7.5-9.8V6L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span>全程在本机浏览器运行，输入内容不上传，不调用视频生成 API。知识库只在本地读取，不会写入原文件夹。</span>
+    </div>
+  </aside>
+
+  <section class="stage">
+    <div class="empty" id="emptyState">
+      <div class="storyboard" aria-hidden="true">
+        <div class="frame"><div class="tag">HOOK</div><div class="sky"></div><div class="bar"></div><div class="bar short"></div></div>
+        <div class="frame"><div class="tag">PAIN</div><div class="sky"></div><div class="bar"></div><div class="bar short"></div></div>
+        <div class="frame"><div class="tag">TURN</div><div class="sky"></div><div class="bar"></div><div class="bar short"></div></div>
+      </div>
+      <h2>一段大白话，直接长出分镜脚本</h2>
+      <p>工具会把你的想法拆成「钩子 → 痛点 → 转折 → 价值 → 收尾」，自动匹配门店经营利益点、人物资产、镜头焦段、音效字效，并输出中英双语 AI 视频提示词。</p>
+      <div class="flow">
+        <span class="flow-item">自然语言</span><span class="flow-arrow">→</span>
+        <span class="flow-item">选题 / 人群 / 痛点</span><span class="flow-arrow">→</span>
+        <span class="flow-item">口播 + 分镜</span><span class="flow-arrow">→</span>
+        <span class="flow-item">可直接粘贴的 Prompt</span>
+      </div>
+      <div class="capabilities">
+        <div class="cap">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg></div>
+          <b>像聊天一样输入</b><span>不用写脚本格式，把人物、难处、想表达的事说清楚就行。</span>
+        </div>
+        <div class="cap">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11M15 9v11"/></svg></div>
+          <b>自动拆成可拍分镜</b><span>每镜给焦段、机位、动作、台词、音效、字效，直接照着拍/生成。</span>
+        </div>
+        <div class="cap">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13 5l-2 14"/></svg></div>
+          <b>中英双语 + 负向约束</b><span>即梦/可灵/海螺用中文，Runway/Veo/Sora 用英文，一次生成。</span>
+        </div>
+      </div>
+      <button class="btn" id="demoBtn" style="margin-top:20px">先看一个示例 <span style="color:#98A0AD">→</span></button>
+    </div>
+
+    <div class="result" id="result">
+      <div class="result-head">
+        <div class="result-kicker" id="resultKicker">AI VIDEO BLUEPRINT</div>
+        <h2 class="result-title" id="resultTitle">—</h2>
+        <p class="result-sub" id="resultSub">—</p>
+        <div class="meta-row" id="metaRow"></div>
+        <div class="head-actions">
+          <button class="btn dark" id="copyDoubaoBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>复制豆包整包</button>
+          <button class="btn" id="copyPurePromptBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>复制纯 Prompt</button>
+          <button class="btn" id="copyAllBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>复制全文</button>
+          <button class="btn" id="downloadMdBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/></svg>下载 Markdown</button>
+          <button class="btn" id="downloadJsonBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M8 12h8M8 16h5"/></svg>下载 JSON</button>
+          <button class="btn" id="saveProjectBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h11l3 3v15H5V3Z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></svg>保存项目</button>
+          <button class="btn" id="printBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2"/><rect x="7" y="14" width="10" height="7"/></svg>打印 / PDF</button>
+          <button class="btn" id="variantBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h11a5 5 0 0 1 0 10H9"/><path d="m7 4-3 3 3 3"/><path d="m15 14-3 3 3 3"/></svg>换一版</button>
+        </div>
+      </div>
+
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="brief">创意简报</button>
+        <button class="tab" data-tab="script">口播脚本</button>
+        <button class="tab" data-tab="shots">分镜 Prompt</button>
+        <button class="tab" data-tab="assets">角色资产</button>
+        <button class="tab" data-tab="publish">发布包</button>
+        <button class="tab" data-tab="check">合规体检</button>
+        <button class="tab" data-tab="kb">知识库</button>
+      </div>
+
+      <div class="panel active" id="panel-brief"></div>
+      <div class="panel" id="panel-script"></div>
+      <div class="panel" id="panel-shots"></div>
+      <div class="panel" id="panel-assets"></div>
+      <div class="panel" id="panel-publish"></div>
+      <div class="panel" id="panel-check"></div>
+      <div class="panel" id="panel-kb"></div>
+    </div>
+  </section>
+</div>
+
+<input type="file" id="kbInput" webkitdirectory multiple accept=".md,.txt,.json" class="hidden" />
+<input type="file" id="kbFileInput" multiple accept=".md,.txt,.json" class="hidden" />
+
+<div class="modal-back" id="projectsModal">
+  <div class="modal">
+    <div class="modal-head"><h3>我的项目</h3><button class="modal-close" data-close-modal="projectsModal">×</button></div>
+    <div id="projectList"></div>
+  </div>
+</div>
+
+<div class="modal-back" id="helpModal">
+  <div class="modal">
+    <div class="modal-head"><h3>怎么用（30 秒上手）</h3><button class="modal-close" data-close-modal="helpModal">×</button></div>
+    <div style="font-size:12px;line-height:1.85;color:#3B4656">
+      <p style="margin-top:0"><b>1. 写一段大白话。</b>说清楚：给谁看、他遇到什么难处、示例品牌能帮什么、你想让观众做什么。不会写就点上面的示例。</p>
+      <p><b>2. 选方向，或全部选自动。</b>人群、叙事模型、风格、时长、平台都会影响分镜结构。</p>
+      <p><b>3. 点生成。</b>你会拿到：创意简报、口播脚本、逐镜 Prompt、角色定妆提示词、发布标题、合规体检。</p>
+      <p><b>4. 复制去生成。</b>即梦 / 可灵 / 海螺用「中文 Prompt」；Runway / Veo / Sora / Pika 用「English」。每镜单独生成，后期按时间轴拼接。</p>
+      <p><b>5. 文字一律后期叠加。</b>LOGO、门头字、手机屏幕字都不要让 AI 生成，避免乱码和品牌风险。</p>
+      <div class="alert info" style="margin-bottom:0"><span>ℹ</span><div><b>建议先导入知识库：</b>点右上角「导入知识库」，选择 <code>你的本地目录\本地目录\workspace\本地知识库</code> 文件夹。工具会读取本地 Markdown，补充利益点依据、检测旧数据冲突。不导入也能用内置提炼版。</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg><span id="toastText">已复制</span></div>
+<script>
+/* ============================================================
+   AI 视频导演台
+   本地知识库版 · 单文件离线应用
+   知识来源：本地知识库（示例业务 / AI视频Prompt方法论 /
+   ai-video-prompt Skill / 8大门店经营利益点 / 数据与语言铁律）
+   ============================================================ */
+
+const APP_VERSION = '1.0.0';
+const KB_VERSION = '2026-10-26';
+
+/* ---------- 角色资产（逐镜复用，禁止改写） ---------- */
+const CHARACTERS = {
+  hero: {
+    key:'hero', name:'老王', role:'社区电脑维修店老板', short:'42岁 · 男老板', initials:'王',
+    cn:'中国男性，42岁，身高约173cm，中等偏瘦，长方形友善脸，暖色中等肤色，短黑发、鬓角少量灰发，轻微眼下纹路，干净无胡须。眼神沉稳有经验，不油滑、不苦相。穿洗旧但干净的炭蓝色维修工装衬衫，袖口卷起，内搭燕麦色圆领T恤，深灰直筒长裤，黑色工作鞋，左腕戴简单深色手表。双手有轻微工作痕迹。表演克制，情绪只靠停顿、视线和很小的嘴角变化。',
+    en:'A Chinese male repair-shop owner, 42 years old, about 173cm, medium-thin build, rectangular friendly face, warm mid skin tone, short black hair with a few grey strands at the temples, faint under-eye lines, clean shaven. Calm experienced eyes, never smug or miserable. Wears a worn but clean charcoal-blue work shirt with sleeves rolled up over an oatmeal crew-neck tee, dark grey straight trousers, black work shoes, a simple dark watch on the left wrist. Slight work marks on the hands. Restrained performance, emotion shown only through pauses, gaze and tiny mouth-corner changes.'
+  },
+  heroine: {
+    key:'heroine', name:'李姐', role:'社区电脑维修店老板', short:'38岁 · 女老板', initials:'李',
+    cn:'中国女性，38岁，身高约162cm，偏瘦，椭圆脸，暖白肤色，黑色齐肩发低马尾，少量笑纹，淡妆。眼神沉稳、干练，不凌厉。穿洗旧的深青色维修工装外套，内搭白色圆领T恤，黑色直筒长裤，深色工作鞋，左腕戴简单银色手表。表演克制，情绪靠停顿、视线和微小表情变化。',
+    en:'A Chinese female repair-shop owner, 38 years old, about 162cm, slim, oval face, warm light skin tone, shoulder-length black hair in a low ponytail, faint smile lines, light makeup. Calm capable eyes, never harsh. Wears a faded dark teal work jacket over a white crew-neck tee, black straight trousers, dark work shoes, a simple silver watch on the left wrist. Restrained performance, emotion shown through pauses, gaze and tiny expression changes.'
+  },
+  young: {
+    key:'young', name:'小陈', role:'年轻维修师傅', short:'27岁 · 维修师傅', initials:'陈',
+    cn:'中国男性，27岁，身高约175cm，偏瘦，圆润友善脸，短黑发，干净无胡须。穿深灰色维修工装外套，内搭黑色T恤，蓝色直筒牛仔裤，白色运动鞋。略显腼腆但认真，说话不急不慢。',
+    en:'A Chinese male computer repair technician, 27 years old, about 175cm, lean, round friendly face, short black hair, clean shaven. Wears a dark grey work jacket over a black tee, blue straight jeans, white sneakers. A little shy but earnest, speaks calmly.'
+  },
+  wife: {
+    key:'wife', name:'妻子', role:'老板的妻子', short:'33岁 · 温和观察者', initials:'妻',
+    cn:'中国女性，33岁，黑色低马尾，淡妆，穿米白色针织开衫，浅灰色家居长裤，脚踩棉拖，手里拎着随身包。性格温和、观察力强，说话不咄咄逼人。',
+    en:'A Chinese woman, 33, black hair in a low ponytail, light makeup, wearing a cream knit cardigan over a light grey home top, light grey trousers and cotton slippers, carrying a small shoulder bag. Gentle and observant, never aggressive.'
+  },
+  customerA: {
+    key:'customerA', name:'顾客甲', role:'路过/潜在客户', short:'25岁 · 男顾客', initials:'客',
+    cn:'中国男性，25岁，偏瘦，椭圆脸，短而整齐的黑发。穿低饱和橄榄绿轻薄夹克、米白连帽卫衣、浅蓝直筒牛仔裤、白色运动鞋，背黑色尼龙双肩包，携带无品牌银色14英寸笔记本电脑。说话礼貌自然，不嘲讽、不夸张。',
+    en:'A Chinese male customer, 25, slim, oval face, short neat black hair. Low-saturation olive green light jacket over an off-white hoodie, light blue straight jeans, white sneakers, black nylon backpack, carrying an unbranded silver 14-inch laptop. Polite and natural, never sarcastic.'
+  },
+  customerB: {
+    key:'customerB', name:'顾客乙', role:'线上找来的成交客', short:'29岁 · 女顾客', initials:'顾',
+    cn:'中国女性，29岁，黑色齐肩直发，淡妆。穿浅米色短风衣、低饱和蓝色针织上衣、黑色直筒裤、白色运动鞋，背深色帆布托特包，手拿灰色电脑内胆包。气质日常、干练，不是广告模特。',
+    en:'A Chinese female customer, 29, shoulder-length straight black hair, light makeup. Short light-beige trench coat over a low-saturation blue knit top, black straight trousers, white sneakers, dark canvas tote bag, holding a grey laptop sleeve. Everyday and capable, not a fashion model.'
+  },
+  staffF: {
+    key:'staffF', name:'品牌女员工', role:'示例品牌渠道经理', short:'30岁 · 渠道经理', initials:'应',
+    cn:'中国女性，30岁上下，干练利落，黑色品牌POLO工服（珠地纹理、黑领、灰扣、浅蓝内领），左胸预留青蓝圆形标识位（无文字与LOGO，后期叠加），不出现可读文字。性格爽朗，说话像同行交流，不喊麦、不夸张点头。',
+    en:'A capable Chinese woman in her early 30s wearing a black branded polo uniform with pique texture, black collar, grey buttons and a pale-blue inner collar. The left chest has a blank circular badge area with no readable text, reserved for post-production overlay. Brisk and collegial, never shouting, no exaggerated nodding.'
+  },
+  staffM: {
+    key:'staffM', name:'品牌工程师', role:'总部技术支持工程师', short:'33岁 · 技术工程师', initials:'工',
+    cn:'中国男性，33岁，短黑发，细黑框眼镜，黑色品牌POLO工服，左胸预留青蓝圆形标识位（无文字与LOGO，后期叠加）。神态专注、耐心，像在跟同行讲技术，不像客服念稿。',
+    en:'A Chinese man, 33, short black hair, thin black-framed glasses, wearing a black branded polo uniform, with a blank circular badge area on the left chest for post-production overlay. Focused and patient, explaining like a fellow technician, not reading a call-center script.'
+  },
+  rival: {
+    key:'rival', name:'同行老周', role:'已加入品牌的同行', short:'40岁 · 同行老板', initials:'周',
+    cn:'中国男性，40岁，略壮，短黑发，穿深藏青色拉链夹克、黑色T恤、深色长裤，手里拿着手机。自信但不傲慢，说话像老朋友。',
+    en:'A Chinese male repair-shop owner, 40, slightly stocky, short black hair, wearing a dark navy zip jacket over a black tee, dark trousers, holding a smartphone. Confident but not arrogant, talks like an old friend.'
+  },
+  delivery: {
+    key:'delivery', name:'快递员', role:'送件上门', short:'26岁 · 快递员', initials:'递',
+    cn:'中国男性，26岁，瘦高，黑色鸭舌帽、橙黄色快递工服马甲、深蓝长裤，抱着小纸箱，礼貌但话少。',
+    en:'A Chinese male courier, 26, tall and thin, black baseball cap, orange-yellow delivery vest, dark blue trousers, carrying a small cardboard box. Polite but quiet.'
+  },
+  multiBoss: {
+    key:'multiBoss', name:'老赵', role:'经营三家维修店', short:'46岁 · 多店老板', initials:'多',
+    cn:'中国男性，46岁，短灰发，穿藏青色休闲西装外套、浅蓝衬衫、深色长裤，手里拿着手机和车钥匙。疲惫但果断，不油腻。',
+    en:'A Chinese male owner of three repair shops, 46, short greying hair, navy casual blazer over a light blue shirt, dark trousers, holding a phone and car keys. Tired but decisive, never slick.'
+  }
+};
+
+/* ---------- 场景资产 ---------- */
+const SCENES = {
+  shop: {
+    cn:'中国城市社区街边电脑维修店，约25平方米。玻璃门，门内挂着金属风铃；靠窗是维修工作台，桌上放着拆开的电脑、绿色防静电垫、精密螺丝刀托盘、保温杯和一盆小绿植；墙面挂着线材、键盘和鼠标，货架略拥挤但不脏乱；米白墙面有正常使用痕迹，旧式吊扇；店外是普通城市街道与树影。不豪华、不贫困感、不苹果店质感。',
+    en:'A small neighbourhood computer repair shop in a Chinese city, about 25 square metres. Glass door with a metal wind chime inside; a repair workbench by the window with a disassembled laptop, green anti-static mat, precision screwdriver tray, thermos and a small potted plant; cables, keyboards and mice hang on the walls; shelves slightly cluttered but not dirty. Off-white walls with normal wear, an old ceiling fan, ordinary street and tree shadows outside. Not luxurious, not shabby, not an Apple Store.'
+  },
+  shopUpgraded: {
+    cn:'同一间25平方米社区电脑维修店，改造后：工作台收拾整齐，工具分区摆放，墙面干净，灯光更明亮温暖，货架規整，门口有新的空白门头底板（文字与LOGO后期叠加），整体更专业但仍然是社区小店，不豪华、不苹果店。',
+    en:'The same 25-square-metre neighbourhood repair shop after upgrading: tidy workbench, tools sorted in zones, clean walls, brighter warm lighting, orderly shelves, a new blank signboard above the door with no lettering, reserved for post-production overlay. More professional but still a community shop, not luxurious, not an Apple Store.'
+  },
+  counter: {
+    cn:'维修店靠窗的工作台局部，绿色防静电垫、精密螺丝刀、拆开的笔记本电脑、保温杯，午后自然光从侧面照进来。',
+    en:'A close area of the repair workbench by the window, green anti-static mat, precision screwdrivers, an opened laptop, a thermos, warm afternoon side light.'
+  },
+  nightShop: {
+    cn:'夜晚的社区街道，维修店只剩一盏暖色工作灯，卷帘门半拉，街灯和树影落在地面，安静、略带疲惫。',
+    en:'A community street at night, only one warm work lamp on inside the repair shop, the roller shutter half down, streetlight and tree shadows on the ground, quiet and a little tired.'
+  },
+  street: {
+    cn:'中国城市普通社区街道，梧桐树影，电动车和行人偶尔经过，午后阳光，生活化，不拍成商业大片。',
+    en:'An ordinary Chinese community street, plane-tree shadows, occasional e-bikes and pedestrians, warm afternoon sun, everyday life, not a commercial blockbuster.'
+  },
+  training: {
+    cn:'简洁的培训教室，白色墙面、木色长桌、笔记本和资料，窗外自然光，学员是普通维修店老板和师傅，不像豪华会议。',
+    en:'A simple training room, white walls, long wooden tables, notebooks and handouts, natural window light, students are ordinary repair-shop owners and technicians, not a luxury conference.'
+  },
+  event: {
+    cn:'城市服务商大会现场，简洁的蓝色舞台背板（文字后期叠加），上百位普通门店老板坐着听讲、交流，灯光温暖，不拍成演唱会。',
+    en:'A city service-partner conference, a clean blue stage backdrop with no lettering, about a hundred ordinary shop owners seated and talking, warm lighting, not a concert.'
+  },
+  stage: {
+    cn:'独立的灰蓝色三维演示舞台，没有真实硬件内部结构、没有铜管和旋转机械，只有抽象的气流通道、灰絮和温度示意，干净、精确、科技感。',
+    en:'An isolated slate-blue 3D demonstration stage, no real hardware internals, no copper pipes, no spinning machinery, only abstract airflow channels, dust lint and temperature indicators. Clean, precise, technical.'
+  }
+};
+
+/* ---------- 8 大门店经营利益点 ---------- */
+const BENEFITS = [
+  {
+    id:'brand', no:'01', name:'品牌背书', short:'示例品牌背书',
+    core:'示例品牌为门店提供品牌背书，帮助客户更快建立信任。',
+    line:'客户还没聊，信任先到一半。',
+    pain:'客户不信任 / 没品牌 / 只能低价内卷',
+    visual:'统一工服、空白授权牌位、门头（文字与LOGO后期叠加）',
+    proof:'示例：品牌背书与多品牌服务能力',
+    keywords:['品牌','背书','信任','正规','靠谱'],
+    color:'cyan'
+  },
+  {
+    id:'online', no:'02', name:'线上获客', short:'从等客户变成订单找上门',
+    core:'示例：总部持续做内容曝光，门店共享线上流量，客户主动找上门。',
+    line:'以前是等客户进门，现在是客户在网上先看到你。',
+    pain:'客流不稳定 / 获客难 / 不懂线上 / 投广告贵',
+    visual:'手机弹出预约通知、地图导航到店、顾客说“在网上看到你们店”',
+    proof:'示例：内容曝光与线上商机派发',
+    keywords:['获客','客流','没客','没人','线上','订单','引流','同城'],
+    color:'green'
+  },
+  {
+    id:'supply', no:'03', name:'供应链支持', short:'正规备件，成本更可控',
+    core:'示例：正规备件渠道，按需采购，减少调货和库存压力。',
+    line:'正品备件、按需供应，不用再为一只配件到处求人。',
+    pain:'配件贵 / 调货慢 / 假货 / 压库存',
+    visual:'原厂备件箱、手机登记入库、整齐的配件货架（标签后期叠加）',
+    proof:'示例：正规备件渠道与按需采购',
+    keywords:['备件','配件','进货','成本','压货','调货','假货','供应链','库存'],
+    color:'amber'
+  },
+  {
+    id:'tech', no:'04', name:'技术团队支持', short:'疑难机型，远程协同',
+    core:'示例：遇到疑难机型，总部工程师远程支持，协同处理。',
+    line:'以前是一个人扛，现在是背后有一支技术团队。',
+    pain:'单打独斗 / 技术焦虑 / 疑难机型搞不定 / 返修',
+    visual:'视频通话指导、工程师看机型、故障机修好、顾客取机',
+    proof:'示例：工程师远程支持与疑难机型协同',
+    keywords:['技术','不会修','疑难','返修','搞不定','工程师','远程','支持'],
+    color:'violet'
+  },
+  {
+    id:'service', no:'05', name:'标准化服务', short:'进门、初检、交付三步',
+    core:'示例：进门、初检、交付，三步标准化服务，让客户体验更稳定。',
+    line:'服务有标准，客户才愿意再来第二次。',
+    pain:'客户不复购 / 服务不稳定 / 交付没章法',
+    visual:'三步服务卡（后期）、工单、初检、交付、顾客满意离开',
+    proof:'示例：三步标准化服务与统一工单',
+    keywords:['服务','复购','回头客','标准','交付','流程','体验','工单'],
+    color:'cyan'
+  },
+  {
+    id:'talent', no:'06', name:'人才培训', short:'培训、认证与人才输送',
+    core:'示例：人才培训与认证，帮助门店补上人才缺口。',
+    line:'缺的不是生意，是能上手的人。',
+    pain:'招人难 / 师傅离职 / 人才断层 / 不会带新人',
+    visual:'培训教室、笔记、实操、结业证书（后期叠加）',
+    proof:'示例：培训、认证与人才输送',
+    keywords:['招人','员工','师傅','人才','培训','离职','带新人','认证'],
+    color:'amber'
+  },
+  {
+    id:'event', no:'07', name:'合作伙伴大会', short:'同行交流，资源对接',
+    core:'示例：城市合作伙伴大会，同行交流经验、对接资源。',
+    line:'一个人摸索很慢，一群人交流快得多。',
+    pain:'孤军奋战 / 没资源 / 信息闭塞 / 不知道别人怎么做',
+    visual:'大会现场、圆桌交流、交换名片、授牌（文字后期）',
+    proof:'示例：城市合作伙伴交流与资源对接',
+    keywords:['大会','合作伙伴','抱团','资源','交流','同行','会议'],
+    color:'violet'
+  },
+  {
+    id:'image', no:'08', name:'门店形象', short:'门头、装修、工服全套扶持',
+    core:'示例：总部提供标准化门头设计、规整门店形象等品牌扶持。',
+    line:'门面规整、形象专业，路过的人更愿意进来问一句。',
+    pain:'形象杂乱 / 不像正规店 / 客户看一眼就走',
+    visual:'低机位仰拍装门头、改造前后同机位 match cut、统一工服',
+    proof:'示例：门头设计、装修规范、工服与物料支持',
+    keywords:['门头','装修','形象','不专业','旧','招牌','工服','门店升级'],
+    color:'green'
+  }
+];
+
+/* ---------- 目标人群 ---------- */
+const AUDIENCES = [
+  { id:'single', name:'单店老板', short:'一个人守店，什么都自己扛', pain:'缺品牌、缺客户、缺备件、精力有限', keywords:['单店','一个人','守店','夫妻店','小店','自己扛','老板'] },
+  { id:'master', name:'维修师傅', short:'技术好，但不懂运营和获客', pain:'技术出身、不会线上、怕开店失败', keywords:['师傅','技术出身','维修工','打工','想开店','技术好','手艺人'] },
+  { id:'cross', name:'跨界转型', short:'看到行业变化，想找新出路', pain:'行业变化快、缺经验、怕踩坑', keywords:['跨界','转行','转型','小白','外行','其他行业','新出路'] },
+  { id:'multi', name:'多店老板', short:'手上几家店，管理半径到顶', pain:'扩张瓶颈、人员难管、供应链分散', keywords:['多店','几家店','连锁','扩张','分店','管理','三家店','两家店'] }
+];
+
+/* ---------- 画面风格 ---------- */
+const STYLES = {
+  real: {
+    id:'real', name:'写实电影感',
+    cn:'超写实电影质感，中国城市社区生活场景，自然肤色与真实皮肤纹理，克制的表演，电影级布光',
+    en:'Photorealistic cinematic live-action, contemporary Chinese community everyday realism, natural skin texture, restrained performance, cinematic lighting',
+    quality:'cinematic lens, shallow depth of field, subtle film grain, high detail',
+    negative:'no cartoon look, no anime, no plastic skin, no studio glamour, no commercial advertising gloss',
+    note:'适合门店经营剧情、人物故事、门店纪实。人物一致性和门店结构要严格参考实拍/定妆图。'
+  },
+  anim3d: {
+    id:'anim3d', name:'3D 动画电影风（原创）',
+    cn:'高品质原创3D动画电影风格，圆润造型、全局光照、柔和次表面肤色、玩具感材质，温暖治愈，不使用任何既有动画工作室IP',
+    en:'High-quality original 3D animated feature-film style, rounded character design, global illumination, soft subsurface skin shading, toy-like materials, warm and heartfelt, original style only, not any existing animation studio IP',
+    quality:'cinematic 3D render, clean geometry, consistent character design, soft depth of field',
+    negative:'no photorealistic human, no live-action look, no existing studio characters, no branded cartoon IP, no exaggerated cartoon expressions',
+    note:'对外称「3D动画电影风」，不要写受版权保护的动画IP等IP名，避免版权与平台审核风险。'
+  },
+  docu: {
+    id:'docu', name:'纪实手持 UGC',
+    cn:'纪实手持拍摄，自然光，轻微晃动，真实UGC质感，像同行随手记录，不像广告',
+    en:'Handheld documentary realism, available light, slight camera shake, authentic UGC texture, like a fellow shop owner filming casually, not an advertisement',
+    quality:'natural grain, realistic exposure, subtle motion blur',
+    negative:'no studio lighting, no posed advertising smile, no gimbal-smooth commercial look, no cinematic color grading',
+    note:'适合CS真人出镜、店内日常、老板自述。缺点是AI一致性较弱，建议少切镜、多固定机位。'
+  },
+  science: {
+    id:'science', name:'三维原理演示',
+    cn:'干净的三维科普演示风格，灰蓝色独立舞台，精确的微距细节，柔和轮廓光，信息清晰',
+    en:'Clean scientific 3D visualization, isolated slate-blue stage, precise macro detail, soft rim lighting, clear informative composition',
+    quality:'high-end 3D render, precise geometry, clean background, subtle depth of field',
+    negative:'no real hardware internals, no copper pipes, no spinning machinery, no flames, no smoke, no eggs, no frying pan, no invented performance percentages',
+    note:'原理画面必须独立示意，不要把真实硬件内部结构画错；数字与结论只做后期字幕。'
+  }
+};
+
+/* ---------- 光线 ---------- */
+const LIGHTS = {
+  warmDay: { cn:'午后自然光从侧面窗户进入，暖色主光，柔和阴影', en:'warm afternoon window light from the side, soft key light, gentle shadows' },
+  warmSoft: { cn:'室内暖色 practical 灯光，柔和顶光，轻微明暗层次', en:'warm practical interior lighting, soft overhead fill, gentle contrast' },
+  night: { cn:'夜晚街灯与店内单一暖色工作灯，低照度，安静', en:'night streetlight with a single warm work lamp inside, low-key, quiet' },
+  morning: { cn:'清晨偏冷的自然光，干净通透，轻微晨雾感', en:'cool clean morning daylight, airy, slight morning haze' },
+  coolStage: { cn:'灰蓝色三维舞台，柔和轮廓光，干净的科技感', en:'slate-blue 3D stage, soft rim light, clean technical mood' },
+  event: { cn:'会场暖色顶光与舞台轮廓光，真实会议氛围', en:'warm conference ceiling light with stage rim light, real event atmosphere' }
+};
+
+/* ---------- 机位 ---------- */
+const ANGLES = {
+  eye:{cn:'眼平',en:'eye level'},
+  low:{cn:'低机位轻仰拍',en:'low angle looking slightly up'},
+  high:{cn:'略俯拍',en:'slightly high angle'},
+  side:{cn:'侧向',en:'side view'},
+  over:{cn:'过肩',en:'over-the-shoulder'}
+};
+const MOVES = {
+  static:{cn:'固定机位',en:'static camera'},
+  push:{cn:'缓慢推近',en:'slow push-in'},
+  pull:{cn:'缓慢拉远',en:'slow dolly-out'},
+  hand:{cn:'轻微手持晃动',en:'subtle handheld movement'},
+  follow:{cn:'跟随移动',en:'gentle follow movement'},
+  pan:{cn:'缓慢横移',en:'slow lateral pan'}
+};
+
+/* ---------- 示例输入 ---------- */
+const EXAMPLES = [
+  '我们这边很多单店老板，一个人守店，技术不错但店里没客人。想拍一条真实、走心的视频：他认真拍短视频想引流，结果还是没人看；后来了解示例品牌，线上开始有订单，顾客也找上门。60秒，发抖音，写实电影感。',
+  '拍一个同行对比：老王每天关店后算账，配件贵、调货慢、利润薄；隔壁同行加入示例品牌后，手机订单不停，备件当天到。老王看着自己的账本，决定也去了解。45秒，真实一点，不要喊麦。',
+  '做一条电脑清灰科普：客户说电脑又吵又烫，以为要换电脑。其实先别急着换。用三维示意讲清楚风扇积灰、散热变差、降频卡顿，最后告诉他多久清一次、不建议自己拆。90秒，专业、可信。',
+  '给多店老板：手上三家店，管不过来，备件各买各的，师傅也不好招。想介绍示例品牌的供应链、培训和线上获客，让他觉得可以继续做大。60秒，视频号。',
+  '我是一名CS城市经理，想直接口播介绍示例品牌能给门店的支持：品牌、线上获客、原厂备件、技术团队。30秒，语速快一点，有力量，但不要喊麦。'
+];
+
+/* ---------- 平台 ---------- */
+const PLATFORMS = {
+  douyin:{name:'抖音', ratio:'9:16 竖屏', tone:'前3秒必须抓人，节奏快，字幕大，结尾引导评论区', tags:['#示例品牌','#电脑维修','#电脑维修店','#开店创业','#同城维修']},
+  channels:{name:'视频号', ratio:'9:16 竖屏', tone:'更信任、更熟人感，适合真实故事和门店日常，结尾引导私信/到店', tags:['#示例品牌','#电脑维修','#门店经营','#创业故事','#同城']},
+  xhs:{name:'小红书', ratio:'3:4 或 9:16', tone:'更生活方式、更干货，封面标题要具体，正文可拆步骤', tags:['#示例品牌','#电脑维修','#开店笔记','#创业日常','#数码维修']},
+  kuaishou:{name:'快手', ratio:'9:16 竖屏', tone:'更接地气、更直接，人物关系要清楚，少用书面语', tags:['#示例品牌','#电脑维修','#手艺人','#开店','#同城']}
+};
+
+/* ---------- 语言与数据红线 ---------- */
+const BANNED_REPLACEMENTS = [
+  { re:/加盟商/g, to:'合作伙伴' },
+  { re:/加盟费/g, to:'合作费用' },
+  { re:/加盟店/g, to:'合作门店' },
+  { re:/加盟/g, to:'加入示例品牌' },
+  { re:/代理商/g, to:'合作伙伴' },
+  { re:/代理费/g, to:'合作费用' },
+  { re:/代理/g, to:'合作' },
+  { re:/保证金/g, to:'合作政策' },
+  { re:/签约/g, to:'达成合作' }
+];
+
+const OFFICIAL_DATA = {
+  scale:'多城市 · 多门店（示例）',
+  tail:'示例品牌已覆盖多家门店，具体合作政策以品牌方最新文件为准',
+  hashtags:'#示例品牌 #门店经营',
+  oldDataWarning:[]
+};
+
+const TAIL_LINE = OFFICIAL_DATA.tail;
+
+/* ---------- 城市（用于识别输入中的城市） ---------- */
+const CITIES = ['北京','上海','广州','深圳','武汉','西安','成都','重庆','杭州','南京','苏州','天津','长沙','郑州','济南','青岛','合肥','福州','厦门','南昌','昆明','贵阳','南宁','海口','太原','石家庄','沈阳','大连','长春','哈尔滨','呼和浩特','银川','兰州','西宁','乌鲁木齐','拉萨','无锡','宁波','温州','佛山','东莞','珠海','中山','惠州','泉州','常州','徐州','南通','烟台','潍坊','洛阳','襄阳','宜昌','株洲','湘潭','九江','赣州','柳州','桂林','绵阳','德阳','宜宾','遵义','大理','三亚'];
+/* ============================================================
+   镜头卡库 A（钩子 / 痛点 / 转折）
+   每张卡 = 可复用的分镜积木：画面、台词、音效、焦段、字效、Prompt 素材
+   ============================================================ */
+const CARDS = [
+  /* ---------- 第一幕：钩子 ---------- */
+  {
+    id:'hook_forget', act:1, actName:'钩子', subjects:['hero'], scene:'shop', weight:1.25,
+    actionCN:'下午，社区维修店。主角把手机架在维修台前的小三脚架上，悄悄把旁边的螺丝盒推远，拉平衣领，坐直身体，对着镜头准备说话，略显笨拙但认真。',
+    actionEN:'The protagonist sits upright in front of a phone mounted on a small tripod at the repair bench, quietly pushing a screw box out of frame, flattening his collar, squaring his shoulders, looking slightly awkward but earnest, about to speak to the camera.',
+    line:ctx=>`大家好，我是${ctx.hero.name}，修电脑十几年了……`,
+    lineLabel:'对镜头', sound:'环境音：街道远景、店内风扇低鸣。BGM 轻快拨弦，音量压低。',
+    mm:24, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'', negative:'', 
+  },
+  {
+    id:'hook_ledger', act:1, actName:'钩子', subjects:['hero'], scene:'nightShop', weight:1.1,
+    actionCN:'关店后的夜晚，主角坐在工作台前，台灯下摊着账本和计算器。他按了几下计算器，数字对不上，停住，慢慢把笔放下，肩膀塌了一点。',
+    actionEN:'Late at night after closing, the protagonist sits at the workbench under a single warm lamp, a ledger and calculator open in front of him. He presses the calculator a few times, the numbers do not add up, he stops, slowly puts down the pen, shoulders dropping slightly.',
+    line:ctx=>`这个月……怎么又对不上。`,
+    lineLabel:'自语', sound:'计算器按键声、街道远处车声。低频 BGM 垫底。',
+    mm:35, angle:'high', move:'static', light:'night', fx:'TICK!', post:'', negative:'', 
+  },
+  {
+    id:'hook_empty', act:1, actName:'钩子', subjects:['hero'], scene:'shop', weight:1.0,
+    actionCN:'下午，空荡的店里。主角坐在门口的小板凳上刷手机，街上行人经过却没有进店。他抬头看了一眼，又低头继续刷，手机短视频的声音很小。',
+    actionEN:'Afternoon in an empty shop. The protagonist sits on a small stool by the door scrolling his phone; pedestrians pass outside but nobody comes in. He glances up once, then looks back down, the faint sound of short videos from his phone.',
+    line:null, lineLabel:'—', sound:'街道环境、店内风扇、手机短视频声（很小）。BGM 留白。',
+    mm:24, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'', negative:'', 
+  },
+  {
+    id:'hook_leave', act:1, actName:'钩子', subjects:['hero','customerA'], scene:'street', weight:1.05,
+    actionCN:'顾客站在店门口低头看手机导航，犹豫了一下，抬头看了看旧门头，又低头，转身走向街另一头。店内主角抬头，正好看到顾客离开的背影。',
+    actionEN:'A customer stands at the shop door looking down at phone navigation, hesitates, glances up at the old signboard, looks down again, then turns and walks away down the street. Inside, the protagonist looks up and catches the customer leaving.',
+    line:null, lineLabel:'—', sound:'街道环境、脚步声远去。风铃没有响。BGM 轻微停顿。',
+    mm:35, angle:'eye', move:'pan', light:'warmDay', fx:'—', post:'手机导航界面后期叠加', negative:'', 
+  },
+  {
+    id:'hook_noise', act:1, actName:'钩子', subjects:['customerA','hero'], scene:'shop', weight:1.1,
+    actionCN:'顾客抱着笔记本电脑进门，电脑风扇声很明显。他把电脑放到工作台上，手掌贴了一下底壳，被烫得立刻缩回手。主角从工作台后抬起头。',
+    actionEN:'A customer walks in carrying a laptop with a loud fan. He sets it on the workbench, touches the bottom case with his palm and immediately pulls his hand back from the heat. The protagonist looks up from behind the bench.',
+    line:()=>'师傅，这电脑特别吵，还烫手。', lineLabel:'对白',
+    sound:'风扇噪音、风铃、街道环境。BGM 压低。',
+    mm:35, angle:'eye', move:'push', light:'warmDay', fx:'WHIRR!', post:'', negative:'laptop must stay closed and supported, no exposed internal hardware', 
+  },
+  {
+    id:'hook_night', act:1, actName:'钩子', subjects:['hero'], scene:'nightShop', weight:1.0,
+    actionCN:'夜晚，主角把卷帘门拉到一半，停住，掏出手机看了一眼。屏幕的光映在他脸上，他沉默了两秒，把手机塞回口袋，继续拉下卷帘门。',
+    actionEN:'At night, the protagonist pulls the roller shutter halfway down, stops, takes out his phone and looks at it. The screen glow lights his face; he is silent for two seconds, puts the phone back in his pocket and continues closing the shutter.',
+    line:null, lineLabel:'—', sound:'卷帘门金属声、远处车声、低频 BGM。',
+    mm:35, angle:'eye', move:'static', light:'night', fx:'—', post:'手机屏幕数据后期叠加', negative:'phone must be held upright, not mirrored, screen content out of focus', 
+  },
+  {
+    id:'hook_multi', act:1, actName:'钩子', subjects:['multiBoss'], scene:'counter', weight:1.1,
+    actionCN:'工作台上摊着三串钥匙、两部手机和几张对账单。多店老板一边接电话，一边翻账单，眉头越皱越紧，另一部手机又响了。',
+    actionEN:'Three sets of shop keys, two phones and several printed statements are spread across the workbench. The multi-shop owner answers a call while flipping through the statements, brow tightening as the second phone starts ringing.',
+    line:()=>'三家店，看着热闹，其实每天都在救火。', lineLabel:'自语',
+    sound:'两部手机铃声、翻纸声、店内远处人声。BGM 低。',
+    mm:35, angle:'high', move:'static', light:'warmSoft', fx:'TICK!', post:'', negative:'no readable text on statements, papers must be blank or out of focus', 
+  },
+  {
+    id:'direct_hook', act:1, actName:'钩子', subjects:['presenter'], scene:'shop', weight:1.0,
+    actionCN:'主角站在店内工作台旁，正对镜头，手里拿着一台合上的笔记本电脑，像跟同行聊天，不喊麦、不指镜头。背景是真实门店。',
+    actionEN:'The presenter stands beside the workbench facing the camera, holding a closed laptop, talking like a fellow shop owner, never shouting or pointing at the lens. A real repair shop behind.',
+    line:()=>'如果你也是开电脑维修店的，这条视频建议你看完。', lineLabel:'对镜头',
+    sound:'店内环境、街道远景。BGM 轻快但克制。',
+    mm:35, angle:'eye', move:'static', light:'warmSoft', fx:'—', post:'', negative:'no microphone in frame, no studio set, no teleprompter visible', 
+  },
+
+  /* ---------- 第二幕：痛点升级 ---------- */
+  {
+    id:'pain_wife', act:2, actName:'痛点', subjects:['hero','wife'], scene:'shop', weight:1.2,
+    actionCN:'妻子从货架后走出来，手里拎着随身包，停在主角侧后方，轻声说话。主角没有回头，手停在手机上方，沉默。',
+    actionEN:'The wife walks out from behind the shelves carrying a small shoulder bag, stops just behind and to the side of the protagonist, and speaks softly. He does not turn around; his hand freezes above the phone.',
+    line:()=>'你拍得挺认真，可附近的人刷不到，拍了给谁看？', lineLabel:'对白',
+    sound:'店内风扇、街道远景。BGM 压低到几乎听不见。',
+    mm:50, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'', negative:'no exaggerated arguing, no crying, restrained body language', 
+  },
+  {
+    id:'pain_rival', act:2, actName:'痛点', subjects:['hero','rival'], scene:'shop', weight:1.15,
+    actionCN:'同行老周推门进来，风铃响，手里拎着两瓶饮料，把手机随手放在工作台上，屏幕亮起。主角抬头，看见老周轻松的样子。',
+    actionEN:'The rival shop owner pushes the door open, the wind chime rings, he carries two bottles of drinks and casually places his phone on the workbench; the screen lights up. The protagonist looks up and sees how relaxed he is.',
+    line:()=>'我现在不用天天守店，手机上就有单。', lineLabel:'对白',
+    sound:'风铃、塑料袋轻响、手机提示音。BGM 轻快。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'DING!', post:'手机订单界面后期叠加', negative:'phone screen content out of focus, no readable UI', 
+  },
+  {
+    id:'pain_customer_search', act:2, actName:'痛点', subjects:['hero','customerA'], scene:'street', weight:1.0,
+    actionCN:'顾客站在店门口低头在手机上搜索，屏幕光照亮脸。他抬头看了一眼旧门头，又低头，转身离开。店内主角透过玻璃看着这一切。',
+    actionEN:'The customer stands at the shop door searching on his phone, the screen lighting his face. He glances up at the old signboard, looks down again and turns away. Inside, the protagonist watches through the glass.',
+    line:null, lineLabel:'—', sound:'街道环境、手机键盘轻响、脚步离开。风铃没有响。',
+    mm:50, angle:'over', move:'static', light:'warmDay', fx:'—', post:'手机搜索界面后期叠加', negative:'no readable search results, screen glow only', 
+  },
+  {
+    id:'pain_quote', act:2, actName:'痛点', subjects:['hero'], scene:'counter', weight:1.0,
+    actionCN:'主角一手拿着电话，一手翻着配件盒。电话那头报了个价，他皱眉，把配件盒推回货架，停了一下。',
+    actionEN:'The protagonist holds a phone to his ear with one hand while searching a parts box with the other. He frowns at the quoted price, pushes the box back onto the shelf and pauses.',
+    line:()=>'这个价，还要等三天？', lineLabel:'对电话',
+    sound:'电话听筒失真、配件盒碰撞、BGM 低。',
+    mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'—', post:'', negative:'no readable labels on parts boxes', 
+  },
+  {
+    id:'pain_tech', act:2, actName:'痛点', subjects:['hero'], scene:'counter', weight:1.0,
+    actionCN:'主角对着一台拆开的笔记本电脑，手里拿着螺丝刀停在半空。视频通话那头的人说不清楚，他摘下眼镜，揉了揉眼睛。',
+    actionEN:'The protagonist faces an opened laptop, screwdriver frozen mid-air. The person on the video call cannot explain clearly; he takes off his glasses and rubs his eyes.',
+    line:()=>'这机器……我真搞不定了。', lineLabel:'自语',
+    sound:'风扇声、视频通话杂音、BGM 低。',
+    mm:50, angle:'eye', move:'push', light:'warmSoft', fx:'—', post:'视频通话界面后期叠加', negative:'do not show realistic internal hardware, keep internals out of focus or covered', 
+  },
+  {
+    id:'pain_staff', act:2, actName:'痛点', subjects:['hero'], scene:'shop', weight:0.95,
+    actionCN:'门上贴着一张空白招聘启事。主角站在门口看着街上，旁边工作台上堆着未修的机器。街角，一个背着包的年轻师傅背影渐渐走远。',
+    actionEN:'A blank hiring notice is taped to the door. The protagonist stands at the entrance looking out at the street, unrepaired machines piled on the bench beside him. At the street corner, a young technician with a backpack walks away.',
+    line:()=>'人留不住，活又堆着。', lineLabel:'自语',
+    sound:'街道环境、风铃轻响、低频 BGM。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'招聘启事文字后期叠加', negative:'no readable text on the notice', 
+  },
+  {
+    id:'pain_alone', act:2, actName:'痛点', subjects:['hero'], scene:'shop', weight:1.0,
+    actionCN:'主角一边接电话，一边把修好的电脑递给顾客，还得用肩膀夹着手机。顾客在旁边等，工具散在台面上，他忙得团团转，最后深吸一口气。',
+    actionEN:'The protagonist answers a call, hands a repaired laptop to a customer and pins the phone against his shoulder at the same time. The customer waits, tools are scattered across the bench, he spins from one task to another and finally takes a deep breath.',
+    line:null, lineLabel:'—', sound:'电话铃声、顾客说话声、工具碰撞。节奏稍快，BGM 轻微紧张。',
+    mm:35, angle:'eye', move:'hand', light:'warmSoft', fx:'TICK!', post:'', negative:'no chaotic slapstick, movements must stay realistic and restrained', 
+  },
+  {
+    id:'pain_trust', act:2, actName:'痛点', subjects:['hero','customerA'], scene:'shop', weight:1.0,
+    actionCN:'顾客站在门口，看着简陋的旧门头，犹豫着问了一句。主角擦了擦手，想解释，却不知道从哪说起。',
+    actionEN:'The customer stands at the entrance looking at the old, plain signboard, hesitating before asking a question. The protagonist wipes his hands, wants to explain, but does not know where to start.',
+    line:()=>'你们……是正规的吗？', lineLabel:'对白',
+    sound:'街道环境、风铃轻响、BGM 停顿半拍。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'', negative:'old signboard must be blank and structurally simple, no letters', 
+  },
+  {
+    id:'sci_question', act:2, actName:'痛点', subjects:['customerA','hero'], scene:'shop', weight:1.0,
+    actionCN:'顾客把笔记本放在工作台上，风扇噪音明显。他用手背碰了一下底壳，立刻缩回，主角拿出测温枪靠近出风口。',
+    actionEN:'The customer sets the laptop on the workbench, the fan loud. He touches the bottom case with the back of his hand and pulls it away; the protagonist brings an infrared thermometer close to the exhaust vent.',
+    line:()=>'不是卡，是又吵又烫。', lineLabel:'对白',
+    sound:'风扇噪音、测温枪滴声、BGM 轻。',
+    mm:50, angle:'eye', move:'static', light:'warmDay', fx:'WHIRR!', post:'温度数字后期叠加', negative:'laptop closed or only exterior vent visible, no internal hardware', 
+  },
+  {
+    id:'sci_wrong', act:2, actName:'痛点', subjects:['customerA','hero'], scene:'shop', weight:0.9,
+    actionCN:'顾客从包里拿出一个小吹风机，准备往笔记本出风口吹。主角伸手轻轻拦住，摇头，把吹风机按回桌上。',
+    actionEN:'The customer takes a small hair dryer from his bag and aims it at the laptop vent. The protagonist gently reaches out to stop him, shakes his head and presses the dryer back onto the table.',
+    line:()=>'别吹，灰会往里走。', lineLabel:'对白',
+    sound:'吹风机启动又停、桌面轻响、BGM 轻。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'POP!', post:'', negative:'no flames, no smoke, no exaggerated comedy', 
+  },
+  {
+    id:'direct_pain', act:2, actName:'痛点', subjects:['presenter'], scene:'shop', weight:1.0,
+    actionCN:'主角走到空荡的店门口，镜头跟着他。他指了一下街上的行人，又指回店里，摊手，没有客人。',
+    actionEN:'The presenter walks to the empty shop entrance as the camera follows. He gestures toward pedestrians in the street, then back into the empty shop, hands open: no customers.',
+    line:()=>'店开着，人也守着，可客流就是不稳定。', lineLabel:'对镜头',
+    sound:'街道环境、BGM 低。',
+    mm:35, angle:'eye', move:'follow', light:'warmDay', fx:'—', post:'', negative:'no staged crowd, street should feel ordinary', 
+  },
+
+  /* ---------- 第三幕：转折 ---------- */
+  {
+    id:'turn_call', act:3, actName:'转折', subjects:['hero'], scene:'counter', weight:1.0,
+    actionCN:'主角坐在工作台前，手机开着免提放在桌上，他拿着笔在纸上记。手机屏幕保持模糊空白，像在咨询一件正经事。',
+    actionEN:'The protagonist sits at the workbench with his phone on speaker, taking notes with a pen. The phone screen stays blurred and blank, as if he is asking about something serious.',
+    line:()=>'我想了解一下，你们这个怎么合作？', lineLabel:'对电话',
+    sound:'电话接通声、笔尖写字声。BGM 转为明亮。',
+    mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'—', post:'手机界面/资料文字后期叠加', negative:'phone screen out of focus, no readable UI', 
+  },
+  {
+    id:'turn_visit', act:3, actName:'转折', subjects:['staffF','hero'], scene:'shop', weight:1.15,
+    actionCN:'风铃响，品牌女员工推门进来，手里拿着资料袋，笑着点头，像同行一样自然。主角起身，在工作台边给她让出位置。',
+    actionEN:'The wind chime rings; the Brand channel manager pushes the door open carrying a document folder, nodding with a natural, collegial smile. The protagonist stands and makes room for her at the workbench.',
+    line:()=>'我先看看你现在店里的情况，再给你说怎么配合。', lineLabel:'对白',
+    sound:'风铃、门轴轻响。BGM 明亮。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'资料袋文字后期叠加', negative:'uniform chest badge must stay blank, no readable logo or text', 
+  },
+  {
+    id:'turn_meeting', act:3, actName:'转折', subjects:['staffF','hero'], scene:'counter', weight:1.1,
+    actionCN:'两人隔着工作台坐下，员工把平板转向主角，手指在屏幕上划。主角身体前倾，认真听，偶尔点头。平板屏幕保持模糊空白。',
+    actionEN:'The two sit across the workbench; the manager turns a tablet toward the protagonist and swipes on the screen. He leans in, listens carefully and nods occasionally. The tablet screen stays blurred and blank.',
+    line:()=>'品牌、线上获客、原厂备件、技术支援，不是单给你一样，是一套配合起来的。', lineLabel:'对白',
+    sound:'店内安静、平板轻触声、BGM 低。',
+    mm:50, angle:'over', move:'static', light:'warmSoft', fx:'—', post:'平板界面后期叠加', negative:'tablet screen out of focus, no readable UI, uniform badge blank', 
+  },
+  {
+    id:'turn_video', act:3, actName:'转折', subjects:['staffM','hero'], scene:'counter', weight:1.0,
+    actionCN:'主角把笔记本摄像头对准故障机，屏幕里是品牌工程师。工程师抬手示意看某个接口，主角按步骤操作。视频画面做成画中画/分屏。',
+    actionEN:'The protagonist points the laptop camera at the faulty machine; a Brand engineer appears on screen, raising a hand to indicate a port. The protagonist follows the steps. Use a picture-in-picture or split-screen composition.',
+    line:()=>'你把故障现象拍给我，我一步一步带你查。', lineLabel:'视频中对白',
+    sound:'视频通话提示音、工具轻响。',
+    mm:50, angle:'over', move:'static', light:'warmSoft', fx:'CLICK!', post:'视频通话界面后期叠加', negative:'engineer on screen must match the same character asset, no readable UI text', 
+  },
+  {
+    id:'turn_event', act:3, actName:'转折', subjects:['staffF','hero'], scene:'event', weight:1.0,
+    actionCN:'会场里，上百位门店老板坐着交流。品牌员工把主角介绍给旁边的同行，三人交换名片、握手，主角略显拘谨但放松。',
+    actionEN:'At the conference, about a hundred shop owners sit and talk. The Brand manager introduces the protagonist to a fellow owner; the three exchange business cards and shake hands. He is a little reserved but relaxing.',
+    line:()=>'大家都是同行，聊聊你怎么做同城。', lineLabel:'对白',
+    sound:'会场人声、远处掌声、温暖 BGM。',
+    mm:35, angle:'eye', move:'hand', light:'event', fx:'—', post:'背板文字/名牌后期叠加', negative:'no readable text on backdrop or badges, no celebrity likeness', 
+  },
+  {
+    id:'turn_training', act:3, actName:'转折', subjects:['young','hero'], scene:'training', weight:0.95,
+    actionCN:'培训教室里，年轻师傅坐在长桌旁记笔记，主角在旁边看实操。讲师在背景虚化处演示，两人对视点头。',
+    actionEN:'In the training room, the young technician takes notes at a long table while the protagonist watches the practical demo. The instructor demonstrates in the blurred background; the two exchange a nod.',
+    line:()=>'人学会了，店才敢接更多活。', lineLabel:'对白',
+    sound:'笔尖声、教室低声交流、轻 BGM。',
+    mm:35, angle:'eye', move:'static', light:'morning', fx:'—', post:'课件/证书文字后期叠加', negative:'no readable text on slides or certificates', 
+  },
+  {
+    id:'turn_sign', act:3, actName:'转折', subjects:['staffF','hero'], scene:'counter', weight:1.0,
+    actionCN:'两人在工作台边握手，另一只手交换资料袋。不出现合同特写，不摆拍看镜头。主角点头，表情克制。',
+    actionEN:'The two shake hands beside the workbench while exchanging a document folder with the other hand. No contract close-up, no posed look at the camera. The protagonist nods, expression restrained.',
+    line:()=>'那就先按这个方案，把店里理一理。', lineLabel:'对白',
+    sound:'资料袋轻响、BGM 上扬但不夸张。',
+    mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'—', post:'文件文字后期叠加', negative:'no close-up of contract, no celebratory pose, uniform badge blank', 
+  },
+  {
+    id:'turn_uniform', act:3, actName:'转折', subjects:['hero','wife'], scene:'shop', weight:0.95,
+    actionCN:'主角在店内小镜子前换上黑色品牌POLO工服，整理领口，左胸标识位保持空白。妻子在背景里帮他拉平肩线，两人都笑得很轻。',
+    actionEN:'The protagonist changes into a black Brand polo uniform in front of a small mirror, adjusting the collar; the left chest badge area stays blank. His wife helps smooth the shoulder line in the background; both smile subtly.',
+    line:null, lineLabel:'—', sound:'布料摩擦、店内环境、温暖 BGM。',
+    mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'—', post:'工服LOGO后期叠加', negative:'uniform badge must be blank, no readable logo or text', 
+  },
+  {
+    id:'sci_stage', act:3, actName:'转折', subjects:[], scene:'stage', weight:1.1,
+    actionCN:'抽象的三维舞台：一条半透明气流通道被灰絮逐渐堵住，风扇叶片变成模糊的光环，温度指示从蓝变橙。没有真实硬件结构、没有铜管和旋转机械。',
+    actionEN:'An abstract 3D stage: a translucent airflow channel is gradually blocked by dust lint, fan blades become a blurred halo, a temperature indicator shifts from blue to orange. No real hardware internals, no copper pipes, no spinning machinery.',
+    line:()=>'灰尘堵住风道，热量出不去。', lineLabel:'画外音',
+    sound:'低频 whoosh、细微风声。此镜无音乐。',
+    mm:50, angle:'eye', move:'push', light:'coolStage', fx:'—', post:'温度/风道文字后期叠加', negative:'no real hardware internals, no copper pipes, no spinning machinery, no flames', 
+  },
+  {
+    id:'direct_benefit', act:3, actName:'转折', subjects:['presenter'], scene:'shop', weight:1.1,
+    actionCN:'主角站在工作台旁，身后是整齐的备件箱和工具墙。他拿起一个空白备件盒，对镜头说，镜头缓慢推近。',
+    actionEN:'The presenter stands beside the workbench with tidy parts boxes and a tool wall behind. He picks up a blank parts box and speaks to the camera as it slowly pushes in.',
+    line:()=>'品牌、线上获客、原厂备件、技术团队，这四件事，总部帮你补齐。', lineLabel:'对镜头',
+    sound:'环境音、BGM 节奏轻快。',
+    mm:50, angle:'eye', move:'push', light:'warmSoft', fx:'—', post:'备件盒标签后期叠加', negative:'no readable labels, no logo on boxes', 
+  }
+];
+/* ============================================================
+   镜头卡库 B（价值兑现 / 收尾）
+   ============================================================ */
+CARDS.push(
+  {
+    id:'value_orders', act:4, actName:'价值', subjects:['hero'], scene:'counter', weight:1.05,
+    actionCN:'主角的手机放在工作台上，屏幕连续亮起预约通知，界面保持模糊。他拿起手机，一条条看，嘴角微微上扬，没有夸张笑。',
+    actionEN:'The protagonist\'s phone lies on the workbench as appointment notifications light up one after another, the UI blurred. He picks it up, reads them one by one, the corner of his mouth lifting slightly, no exaggerated smile.',
+    line:null, lineLabel:'—', sound:'连续提示音三声。BGM 明亮。',
+    mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'DING! ×3', post:'订单/预约界面后期叠加', negative:'phone screen out of focus, no readable UI, phone held upright', 
+  },
+  {
+    id:'value_customer', act:4, actName:'价值', subjects:['customerB','hero'], scene:'shop', weight:1.15,
+    actionCN:'风铃响，女顾客抱着电脑进门，有点喘、有点期待地看向工作台。主角从工作台后起身，拉开顾客椅。',
+    actionEN:'The wind chime rings; a female customer walks in carrying a laptop, a little out of breath and hopeful, looking toward the workbench. The protagonist stands up from behind the bench and pulls out the customer chair.',
+    line:()=>'老板，在网上看到你们店，来修一下电脑。', lineLabel:'对白',
+    sound:'风铃、街道环境、温暖 BGM。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'', negative:'laptop must stay closed and supported with both arms', 
+  },
+  {
+    id:'value_supply', act:4, actName:'价值', subjects:['hero'], scene:'counter', weight:1.0,
+    actionCN:'主角打开一个原厂备件箱，封条刚拆，里面是整齐的配件。他拿起一件看了看，又放下，用手机登记入库，屏幕保持模糊。',
+    actionEN:'The protagonist opens an original parts box, the seal just broken, components neatly arranged inside. He picks one up, examines it, puts it back and scans it into inventory with his phone, the screen blurred.',
+    line:null, lineLabel:'—', sound:'撕封条、纸箱摩擦、录入提示音。',
+    mm:50, angle:'eye', move:'push', light:'warmSoft', fx:'CLICK!', post:'备件标签/入库界面后期叠加', negative:'no readable labels or logos, parts must look clean and generic', 
+  },
+  {
+    id:'value_tech', act:4, actName:'价值', subjects:['staffM','hero'], scene:'counter', weight:1.05,
+    actionCN:'画中画：主角按工程师指示操作，故障机屏幕终于亮起。主角松了一口气，对屏幕点头。顾客在旁接过修好的电脑。',
+    actionEN:'Picture-in-picture: the protagonist follows the engineer\'s instructions and the faulty laptop screen finally lights up. He exhales, nods to the screen; a customer beside him receives the repaired laptop.',
+    line:()=>'这机器，终于通了。', lineLabel:'对白',
+    sound:'开机提示音、工具放下、轻 BGM。',
+    mm:50, angle:'over', move:'static', light:'warmSoft', fx:'DING!', post:'视频界面后期叠加', negative:'no readable UI text, engineer must match the same character asset', 
+  },
+  {
+    id:'value_service', act:4, actName:'价值', subjects:['hero','customerB'], scene:'shop', weight:1.0,
+    actionCN:'主角把一张空白服务卡推到顾客面前，用手指依次点三个位置。顾客点头。随后他把电脑装进保护袋，双手递上。',
+    actionEN:'The protagonist slides a blank service card toward the customer and taps three positions in order; the customer nods. He then places the laptop into a protective sleeve and hands it over with both hands.',
+    line:()=>'进门、初检、交付，每一步都给你说清楚。', lineLabel:'对白',
+    sound:'卡片轻响、拉链声、温暖 BGM。',
+    mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'—', post:'三步服务卡文字/图标后期叠加', negative:'card must stay blank, no readable text', 
+  },
+  {
+    id:'value_store', act:4, actName:'价值', subjects:['hero'], scene:'shopUpgraded', weight:1.1,
+    actionCN:'低机位仰拍：两名安装师傅在梯子上装新的空白门头底板，主角在下面扶着梯子，抬头看。阳光照在新门头上。',
+    actionEN:'Low-angle shot: two installers on ladders mount a new blank signboard above the shop; the protagonist holds the ladder below and looks up. Sunlight falls on the new signboard.',
+    line:null, lineLabel:'—', sound:'电钻/螺丝刀、街道环境、BGM 上扬。',
+    mm:24, angle:'low', move:'static', light:'warmDay', fx:'CLICK!', post:'门头LOGO/文字后期叠加', negative:'signboard must be blank, no letters, building structure must stay unchanged', 
+  },
+  {
+    id:'value_busy', act:4, actName:'价值', subjects:['hero','customerB','wife'], scene:'shopUpgraded', weight:1.0,
+    actionCN:'店内三位顾客。主角在工作台修机，妻子在前台接待，年轻师傅在货架旁找配件。忙碌但有序，每个人都在自己的位置。',
+    actionEN:'Three customers in the shop. The protagonist repairs at the bench, his wife greets at the front counter, a young technician looks for parts by the shelves. Busy but orderly, everyone in their place.',
+    line:null, lineLabel:'—', sound:'店内自然声、风铃、键盘声、温暖 BGM。',
+    mm:24, angle:'eye', move:'hand', light:'warmSoft', fx:'—', post:'', negative:'no staged crowd, movements must feel like a real small shop', 
+  },
+  {
+    id:'value_repeat', act:4, actName:'价值', subjects:['customerA','customerB','hero'], scene:'shop', weight:0.95,
+    actionCN:'老顾客带着朋友进门，拍了拍主角的肩膀，指着朋友说了一句。主角擦擦手，笑着点头，接过朋友的电脑。',
+    actionEN:'A regular customer walks in with a friend, pats the protagonist on the shoulder and gestures toward the friend. The protagonist wipes his hands, nods with a smile and takes the friend\'s laptop.',
+    line:()=>'我一直在他们家修，放心。', lineLabel:'对白',
+    sound:'风铃、轻笑声、轻 BGM。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'', negative:'no exaggerated hugging or staged laughter', 
+  },
+  {
+    id:'value_multi', act:4, actName:'价值', subjects:['multiBoss','young'], scene:'shopUpgraded', weight:0.95,
+    actionCN:'第二家店门口，多店老板把一串钥匙交给年轻店长，拍了拍他的肩膀，表情信任。门头是空白底板。',
+    actionEN:'At the entrance of a second shop, the multi-shop owner hands a set of keys to the young store manager and pats his shoulder with trust. The signboard above is a blank panel.',
+    line:()=>'这家店交给你，我放心。', lineLabel:'对白',
+    sound:'钥匙串轻响、街道环境、稳健 BGM。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'门头文字后期叠加', negative:'signboard blank, no readable text', 
+  },
+  {
+    id:'value_ai', act:4, actName:'价值', subjects:['hero'], scene:'counter', weight:0.9,
+    actionCN:'主角用手机对准故障机拍照，手机屏幕出现检测进度（界面模糊），他看一眼结果，在平板上生成工单。动作熟练，不炫技。',
+    actionEN:'The protagonist photographs the faulty machine with his phone; a detection progress screen appears, blurred. He checks the result and creates a work order on a tablet. Skilled, not showy.',
+    line:()=>'以前靠脑子记，现在工具帮我记。', lineLabel:'对白',
+    sound:'拍照声、提示音、轻快 BGM。',
+    mm:50, angle:'over', move:'static', light:'warmSoft', fx:'SWISH!', post:'手机/平板界面后期叠加', negative:'no readable UI, no futuristic hologram, keep it practical', 
+  },
+  {
+    id:'sci_effect', act:4, actName:'价值', subjects:[], scene:'stage', weight:1.0,
+    actionCN:'三维示意：风扇转速加快，气流仍然出不去，温度条从橙变红，画面角落出现「降频/卡顿」的抽象图标。主角不出镜。',
+    actionEN:'3D visualization: the fan speeds up but airflow still cannot escape, the temperature bar shifts from orange to red, and abstract "thermal throttling / stutter" icons appear in the corner. No protagonist on screen.',
+    line:()=>'散热跟不上，机器就会降频、卡顿。', lineLabel:'画外音',
+    sound:'风扇加速声、低频压力感。此镜无旋律音乐。',
+    mm:50, angle:'eye', move:'push', light:'coolStage', fx:'WHIRR!', post:'降频/卡顿文字后期叠加', negative:'no real hardware internals, no flames, no smoke, no invented percentages', 
+  },
+  {
+    id:'sci_clean', act:4, actName:'价值', subjects:['hero'], scene:'counter', weight:0.95,
+    actionCN:'主角在工作台上用软毛刷清理笔记本出风口的灰尘，机身合着，不拆开，不出现内部结构。灰尘被吸走，动作轻。',
+    actionEN:'The protagonist gently cleans dust from the laptop exhaust vent with a soft brush, the laptop closed, no disassembly, no internal structure visible. Dust is drawn away, movements light.',
+    line:null, lineLabel:'—', sound:'软毛刷轻响、吸尘器低鸣、轻 BGM。',
+    mm:85, angle:'eye', move:'static', light:'warmSoft', fx:'—', post:'', negative:'laptop must stay closed, no internal hardware, no copper pipes, no spinning fan visible', 
+  },
+  {
+    id:'sci_standard', act:4, actName:'价值', subjects:['hero','customerA'], scene:'counter', weight:1.0,
+    actionCN:'主角把一张空白维护卡推到顾客面前，用手指点两个时间点。顾客点头。卡片上保持空白，文字后期叠加。',
+    actionEN:'The protagonist slides a blank maintenance card toward the customer and taps two time points; the customer nods. The card stays blank, text added in post.',
+    line:()=>'普通家庭一年到一年半，养宠物的，六到八个月看一次。', lineLabel:'对白',
+    sound:'卡片轻响、轻 BGM。',
+    mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'—', post:'维护周期文字后期叠加', negative:'card blank, no readable text', 
+  },
+  {
+    id:'end_same_angle', act:5, actName:'收尾', subjects:['hero'], scene:'shopUpgraded', weight:1.0,
+    actionCN:'与开头完全相同的机位和构图：主角在维修台前工作，店铺更亮、更整齐，他更从容。画面停留两秒。',
+    actionEN:'The exact same camera angle and framing as the opening shot: the protagonist works at the repair bench, the shop brighter and tidier, his manner more settled. Hold for two seconds.',
+    line:null, lineLabel:'—', sound:'店内环境、远处风铃、BGM 收束。',
+    mm:24, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'', negative:'camera angle and framing must match the opening shot exactly, same lens and height', 
+  },
+  {
+    id:'end_door', act:5, actName:'收尾', subjects:['hero','customerB'], scene:'shopUpgraded', weight:0.9,
+    actionCN:'风铃再次响起，主角抬头，看见顾客进门，放下工具起身。顾客抱着电脑，两人自然对视。',
+    actionEN:'The wind chime rings again. The protagonist looks up, sees the customer entering, puts down his tool and stands. The customer carries a laptop; they meet eyes naturally.',
+    line:null, lineLabel:'—', sound:'风铃（与第一次同音）、温暖 BGM。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'', negative:'same wind chime sound as the first door shot, no extra chime', 
+  },
+  {
+    id:'end_pullout', act:5, actName:'收尾', subjects:['hero','customerB','wife'], scene:'shopUpgraded', weight:1.05,
+    actionCN:'从85mm特写缓慢拉远到35mm：主角认真听顾客说明，妻子在货架旁抬头轻笑，店内有了生气。最后带出整理好的店和空白门头。',
+    actionEN:'Slow dolly-out from an 85mm close-up to a 35mm wide shot: the protagonist listens carefully to the customer, his wife glances up from the shelf and smiles gently, the shop feels alive. The tidy interior and blank signboard are revealed.',
+    line:null, lineLabel:'—', sound:'BGM 明亮收尾，环境声保留。',
+    mm:85, angle:'eye', move:'pull', light:'warmDay', fx:'—', post:'门头文字后期叠加', negative:'signboard blank, no readable text, smooth dolly-out only', 
+  },
+  {
+    id:'end_look', act:5, actName:'收尾', subjects:['presenter'], scene:'shopUpgraded', weight:0.9,
+    actionCN:'主角正对镜头，克制地微笑，说一句邀请。不喊口号、不指镜头、不摆拍。',
+    actionEN:'The presenter faces the camera with a restrained smile and delivers a quiet invitation. No slogan shouting, no pointing at the lens, no posed advertising grin.',
+    line:()=>'想了解怎么加入示例品牌，评论区留「品牌」，我发你一份门店经营测算。', lineLabel:'对镜头',
+    sound:'BGM 收尾，环境声保留。',
+    mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'—', post:'结尾字幕后期叠加', negative:'no exaggerated smile, no pointing at camera, no microphone in frame', 
+  },
+  {
+    id:'end_night', act:5, actName:'收尾', subjects:['hero'], scene:'nightShop', weight:0.95,
+    actionCN:'夜晚，主角拉下卷帘门，手机在口袋里亮了一下。他拿出来看，屏幕光映在脸上，轻松地笑了一下。街灯安静。',
+    actionEN:'At night, the protagonist pulls down the roller shutter; his phone lights up in his pocket. He takes it out, the screen glow on his face, and smiles with relief. The streetlamp is quiet.',
+    line:null, lineLabel:'—', sound:'卷帘门、夜晚街道、手机提示音、温柔 BGM。',
+    mm:35, angle:'eye', move:'static', light:'night', fx:'DING!', post:'手机界面后期叠加', negative:'phone held upright, screen content out of focus, no readable UI', 
+  },
+  {
+    id:'end_handshake', act:5, actName:'收尾', subjects:['staffF','hero'], scene:'shopUpgraded', weight:0.9,
+    actionCN:'主角和品牌员工在店门口握手，像合作开始，不摆拍看镜头。背景是整理好的店和空白门头，阳光自然。',
+    actionEN:'The protagonist and the Brand manager shake hands at the shop entrance, like the start of a working relationship, not a posed photo. Behind them, the tidy shop and blank signboard, natural sunlight.',
+    line:()=>'后面有需要，随时找我。', lineLabel:'对白',
+    sound:'街道环境、衣料轻响、BGM 收尾。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'门头文字后期叠加', negative:'no posed look at camera, no celebratory gesture, uniform badge blank', 
+  },
+  {
+    id:'sci_end', act:5, actName:'收尾', subjects:['hero','customerA'], scene:'shop', weight:1.0,
+    actionCN:'顾客接过修好的电脑，试了试风扇声音，点头。主角擦擦手，对镜头说一句，克制。',
+    actionEN:'The customer receives the repaired laptop, listens to the fan and nods. The protagonist wipes his hands and says one line to the camera, restrained.',
+    line:()=>'不建议自己拆，有清灰需要，来示例品牌服务中心。', lineLabel:'对镜头',
+    sound:'开机声、顾客道谢、轻 BGM。',
+    mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'DING!', post:'服务信息/尾板后期叠加', negative:'no exaggerated smile, no logo generated in frame', 
+  },
+  {
+    id:'direct_cta', act:5, actName:'收尾', subjects:['presenter'], scene:'shop', weight:0.9,
+    actionCN:'主角站在店门口，身后是空白门头，对镜头说完最后一句，停一秒，点头。不喊麦。',
+    actionEN:'The presenter stands at the shop entrance with a blank signboard behind, finishes the last line to camera, pauses for a second and nods. Never shouts.',
+    line:()=>'想了解怎么加入，评论区留「品牌」，我发你一份门店经营测算。', lineLabel:'对镜头',
+    sound:'BGM 收尾、街道环境。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'结尾字幕后期叠加', negative:'signboard blank, no readable text, no shouting', 
+  }
+);
+/* ============================================================
+   生成引擎 A：解析 → 选卡 → 分配时长 → 组装镜头 → Prompt
+   ============================================================ */
+
+const ARCHETYPES = {
+  dilemma:{ name:'困境共鸣', desc:'先让目标人群在故事里看到自己，再用一个具体转折给出出路。', emotion:'压抑 → 被点破 → 看到希望 → 被验证 → 轻释然' },
+  mismatch:{ name:'错位擦肩', desc:'老板很努力，客户也就在门口，但客户被线上别家截走。', emotion:'期待 → 困惑 → 失落 → 主动求助 → 被看见' },
+  comparison:{ name:'同行对比', desc:'不争论、不说教，用两个同行截然不同的经营状态代替说服。', emotion:'疲惫 → 羡慕 → 不甘 → 尝试 → 释然' },
+  science:{ name:'科普解误区', desc:'用一个具体故障建立专业感，用三维示意讲清原理，再自然落到服务。', emotion:'疑惑 → 紧张 → 明白 → 放心 → 信任' },
+  direct:{ name:'口播直给', desc:'不绕故事，CS或老板直接对镜头，把痛点和四件事讲清楚。', emotion:'共鸣 → 直接 → 有底 → 行动' }
+};
+
+const BENEFIT_CARDS = {
+  brand:{ turn:['turn_uniform'], value:['value_store','value_repeat'] },
+  online:{ turn:['turn_meeting'], value:['value_orders','value_customer'] },
+  supply:{ turn:['turn_meeting'], value:['value_supply','value_orders'] },
+  tech:{ turn:['turn_video'], value:['value_tech','value_repeat'] },
+  service:{ turn:['turn_meeting'], value:['value_service','value_repeat'] },
+  talent:{ turn:['turn_training'], value:['value_busy','value_repeat'] },
+  event:{ turn:['turn_event'], value:['value_busy','value_repeat'] },
+  image:{ turn:['turn_uniform'], value:['value_store','value_busy'] }
+};
+
+const PLAYBOOK = {
+  dilemma:{
+    1:['hook_forget','hook_night','hook_empty'],
+    2:['pain_wife','pain_alone','pain_trust','pain_staff','pain_quote'],
+    3:['turn_call','turn_visit','turn_meeting','$turn','turn_sign'],
+    4:['value_orders','value_customer','$value','value_busy','value_repeat'],
+    5:['end_same_angle','end_door','end_pullout','end_look','end_night']
+  },
+  mismatch:{
+    1:['hook_forget','hook_leave','hook_empty'],
+    2:['pain_customer_search','pain_wife','pain_trust','pain_alone','pain_staff'],
+    3:['turn_call','turn_visit','turn_meeting','$turn'],
+    4:['value_orders','value_customer','$value','value_busy','value_repeat'],
+    5:['end_same_angle','end_door','end_pullout','end_look']
+  },
+  comparison:{
+    1:['hook_ledger','hook_empty','hook_night'],
+    2:['pain_rival','pain_quote','pain_alone','pain_staff','pain_tech'],
+    3:['turn_visit','turn_meeting','$turn','turn_call'],
+    4:['value_orders','value_supply','$value','value_customer','value_busy'],
+    5:['end_same_angle','end_look','end_door','end_night']
+  },
+  science:{
+    1:['hook_noise'],
+    2:['sci_question','sci_wrong','pain_trust'],
+    3:['sci_stage','turn_video'],
+    4:['sci_effect','sci_clean','sci_standard','value_tech','value_service'],
+    5:['sci_end','end_look','end_pullout']
+  },
+  direct:{
+    1:['direct_hook'],
+    2:['direct_pain','pain_alone'],
+    3:['direct_benefit','turn_meeting','turn_uniform'],
+    4:['value_orders','value_busy','$value','value_customer','value_supply'],
+    5:['end_handshake','direct_cta']
+  }
+};
+
+let VARIANT = 0;
+
+const ACT_TARGETS = {
+  30:[1,2,1,2,1],
+  45:[1,3,2,3,2],
+  60:[2,3,3,4,3],
+  90:[3,5,5,6,3]
+};
+
+const SHORT_LINES = {
+  hook_forget:ctx=>`大家好，我是${ctx.hero.name}，修电脑十几年了。`,
+  hook_ledger:()=>'这个月，怎么又对不上。',
+  hook_multi:()=>'三家店，每天都在救火。',
+  pain_wife:()=>'拍得再认真，附近的人刷不到。',
+  pain_rival:()=>'我现在不用守店，手机上就有单。',
+  pain_quote:()=>'这个价，还要等三天？',
+  pain_tech:()=>'这机器，我真搞不定了。',
+  pain_staff:()=>'人留不住，活又堆着。',
+  pain_trust:()=>'你们是正规的吗？',
+  sci_question:()=>'不是卡，是又吵又烫。',
+  sci_wrong:()=>'别吹，灰会往里走。',
+  direct_hook:()=>'开电脑维修店的，建议看完。',
+  direct_pain:()=>'店开着，客流却不稳定。',
+  turn_call:()=>'你们这个怎么合作？',
+  turn_visit:()=>'我先看看你店里的情况。',
+  turn_meeting:()=>'品牌、获客、备件、技术，是一套的。',
+  turn_video:()=>'你把故障拍给我，我带你查。',
+  turn_event:()=>'大家都是同行，聊聊同城怎么做。',
+  turn_training:()=>'人学会了，店才敢接更多活。',
+  turn_sign:()=>'那就先按这个方案理一理。',
+  direct_benefit:()=>'品牌、获客、备件、技术，总部补齐。',
+  value_customer:()=>'在网上看到你们店，来修一下。',
+  value_service:()=>'进门、初检、交付，都说清楚。',
+  value_tech:()=>'这机器，终于通了。',
+  value_ai:()=>'以前靠脑子记，现在工具帮我记。',
+  sci_effect:()=>'散热跟不上，就会降频、卡顿。',
+  sci_standard:()=>'普通家庭一年到一年半，养宠物六到八个月。',
+  end_look:()=>'想了解，评论区留「品牌」。',
+  end_handshake:()=>'后面有需要，随时找我。',
+  sci_end:()=>'不建议自己拆，来品牌服务中心。',
+  direct_cta:()=>'想了解，评论区留「品牌」。'
+};
+
+/* ---------- 文本工具 ---------- */
+function normalizeText(s){
+  let t = String(s || '');
+  BANNED_REPLACEMENTS.forEach(r=>{ t = t.replace(r.re, r.to); });
+  return t.replace(/\s+/g,' ').trim();
+}
+function uniq(arr){ return Array.from(new Set(arr)); }
+function countOcc(text, kw){ if(!kw) return 0; return text.split(kw).length - 1; }
+function cnLen(s){ return String(s||'').replace(/[，。！？、；：""''《》〈〉（）()\[\]【】\s·—…,.!?;:'"%-]/g,'').length; }
+function truncate(s,n){ s=String(s||''); return s.length>n ? s.slice(0,n-1)+'…' : s; }
+function round1(n){ return Math.round(n*10)/10; }
+function fmtTime(n){ return (Math.round(n*10)/10).toFixed(1); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+/* ---------- 解析 ---------- */
+function detectArchetype(text, fallback){
+  if(fallback && fallback!=='auto') return fallback;
+  if(/清灰|散热|温度|噪音|原理|科普|误区|烫手|风扇/.test(text)) return 'science';
+  if(/同行|隔壁|别人|对比|炫耀|老周/.test(text)) return 'comparison';
+  if(/拍视频|短视频|发了|播放|没人看|刷不到|线上没|抖音没/.test(text)) return 'mismatch';
+  if(/口播|直接说|直接讲|我是一名.{0,8}(CS|城市经理|渠道经理)|我是.{0,6}(CS|城市经理|渠道经理)/i.test(text)) return 'direct';
+  return 'dilemma';
+}
+function detectStyle(text, archetype, fallback){
+  if(fallback && fallback!=='auto') return fallback;
+  if(archetype==='science') return 'science';
+  if(/3D|三维动画|动画|卡通/i.test(text)) return 'anim3d';
+  if(/手持|纪实|UGC|随手拍|真实记录/i.test(text)) return 'docu';
+  return 'real';
+}
+function detectDuration(text, fallback){
+  let m = text.match(/(\d{2,3})\s*(秒|s|S)/);
+  if(m){ const n=parseInt(m[1],10); return [30,45,60,90].reduce((a,b)=>Math.abs(b-n)<Math.abs(a-n)?b:a,60); }
+  if(/一分半|1\.5分钟|90秒/.test(text)) return 90;
+  if(/半分钟|30秒/.test(text)) return 30;
+  if(/1分钟|一分钟/.test(text)) return 60;
+  return parseInt(fallback,10)||60;
+}
+function detectPlatform(text, fallback){
+  if(/小红书/.test(text)) return 'xhs';
+  if(/视频号/.test(text)) return 'channels';
+  if(/快手/.test(text)) return 'kuaishou';
+  if(/抖音/.test(text)) return 'douyin';
+  return (fallback && fallback!=='auto' && PLATFORMS[fallback]) ? fallback : 'douyin';
+}
+function detectAudience(text, fallback){
+  if(fallback && fallback!=='auto') return AUDIENCES.find(a=>a.id===fallback)||AUDIENCES[0];
+  let best=AUDIENCES[0], score=0;
+  AUDIENCES.forEach(a=>{
+    let s=0;
+    a.keywords.forEach(k=>{ if(text.includes(k)) s+=1+Math.min(2,countOcc(text,k)-1); });
+    if(text.includes(a.name)) s+=3;
+    if(s>score){ score=s; best=a; }
+  });
+  return best;
+}
+function detectBenefit(text, archetype, audience){
+  if(archetype==='science') return BENEFITS.find(b=>b.id==='tech');
+  if(audience.id==='multi' && /供应链|备件|配件/.test(text)) return BENEFITS.find(b=>b.id==='supply');
+  const aliases = {
+    brand:['品牌背书','品牌背书','五百强','示例集团'],
+    online:['线上获客','获客','同城','订单'],
+    supply:['供应链','原厂备件','备件'],
+    tech:['技术团队','技术支持','工程师'],
+    service:['标准化服务','服务规范','复购'],
+    talent:['人才培训','培训','招人','留人'],
+    event:['服务商大会','大会','同行交流'],
+    image:['门店形象','门头','装修']
+  };
+  let best=null, score=0;
+  BENEFITS.forEach(b=>{
+    let s=0;
+    b.keywords.forEach(k=>{ if(text.includes(k)) s+=1+Math.min(2,countOcc(text,k)-1); });
+    if(text.includes(b.name)) s+=3;
+    (aliases[b.id]||[]).forEach(k=>{ if(text.includes(k)) s+=2; });
+    if(s>score){ score=s; best=b; }
+  });
+  if(!best){
+    if(audience.id==='multi') best=BENEFITS.find(b=>b.id==='supply');
+    else best=BENEFITS.find(b=>b.id==='online');
+  }
+  return best;
+}
+function detectHero(text, fallback){
+  if(fallback==='heroine' || /女老板|李姐/.test(text)) return CHARACTERS.heroine;
+  if(fallback==='young' || /小陈|年轻师傅|27岁/.test(text)) return CHARACTERS.young;
+  return CHARACTERS.hero;
+}
+function detectCity(text){ for(const c of CITIES){ if(text.includes(c)) return c; } return ''; }
+function detectTone(text){
+  if(/幽默|搞笑|轻松/.test(text)) return {id:'light',name:'轻松幽默'};
+  if(/专业|干货|可信/.test(text)) return {id:'pro',name:'专业可信'};
+  if(/激情|有力量|高燃/.test(text)) return {id:'power',name:'有力量'};
+  if(/走心|真实|克制|不要喊麦/.test(text)) return {id:'warm',name:'真实走心'};
+  return {id:'warm',name:'真实克制'};
+}
+
+function parseInput(input){
+  const rawOriginal = String(input.idea||'');
+  const text = normalizeText(rawOriginal);
+  const archetype = detectArchetype(text, input.archetype);
+  const styleId = detectStyle(text, archetype, input.style);
+  const duration = detectDuration(text, input.duration);
+  const platformId = detectPlatform(text, input.platform);
+  const audience = detectAudience(text, input.audience);
+  const benefit = detectBenefit(text, archetype, audience);
+  let hero = detectHero(text, input.hero);
+  if(audience.id==='multi' && (!input.hero || input.hero==='hero') && !/老王|李姐|小陈/.test(text)) hero = CHARACTERS.multiBoss;
+  const city = normalizeText(String(input.city||'').trim()) || detectCity(text);
+  const shopName = normalizeText(String(input.shop||'').trim()) || (city ? `${city}社区维修店` : '社区维修店');
+  const presenterKey = /CS|城市经理|渠道经理|渠道人员|我是一名/.test(rawOriginal) ? 'staffF' : hero.key;
+  const hasRef = !!input.hasRef || /参考图|定妆|已有图|角色图/.test(text);
+  const tone = detectTone(text);
+  return {
+    rawOriginal, text, archetype, archetypeName:ARCHETYPES[archetype].name,
+    styleId, style:STYLES[styleId], duration, platformId, platform:PLATFORMS[platformId],
+    audience, benefit, hero, presenter:CHARACTERS[presenterKey], presenterKey,
+    city, shopName, hasRef, tone,
+    themeHint: truncate(text, 90)
+  };
+}
+
+/* ---------- 选卡 ---------- */
+function expandCardId(id, ctx){
+  if(id==='$turn') return [BENEFIT_CARDS[ctx.benefit.id].turn[0]];
+  if(id==='$value') return BENEFIT_CARDS[ctx.benefit.id].value.slice(0,2);
+  return [id];
+}
+function selectCards(ctx){
+  const plan = JSON.parse(JSON.stringify(PLAYBOOK[ctx.archetype] || PLAYBOOK.dilemma));
+  if(ctx.audience.id==='multi'){
+    plan[1] = ['hook_multi','hook_night', ...(plan[1]||[]).filter(x=>!['hook_multi','hook_night'].includes(x))];
+    plan[2] = ['pain_alone','pain_staff','pain_quote', ...(plan[2]||[]).filter(x=>!['pain_alone','pain_staff','pain_quote'].includes(x))];
+    plan[4] = ['value_multi','value_busy','value_supply', ...(plan[4]||[]).filter(x=>!['value_multi','value_busy','value_supply'].includes(x))];
+  }
+  const targets = ACT_TARGETS[ctx.duration] || ACT_TARGETS[60];
+  const used = new Set();
+  const out = [];
+  const noFill = (ctx.archetype==='science' || ctx.archetype==='direct');
+  for(let act=1; act<=5; act++){
+    const picked = [];
+    let candidates = plan[act] || [];
+    if(VARIANT>0 && act!==3 && candidates.length>1 && !(ctx.audience.id==='multi' && act===1)){
+      const offset = VARIANT % candidates.length;
+      candidates = candidates.slice(offset).concat(candidates.slice(0,offset));
+    }
+    for(const id of candidates){
+      for(const rid of expandCardId(id, ctx)){
+        if(used.has(rid)) continue;
+        const card = CARDS.find(c=>c.id===rid);
+        if(!card || card.act!==act) continue;
+        picked.push(rid); used.add(rid);
+        if(picked.length>=targets[act-1]) break;
+      }
+      if(picked.length>=targets[act-1]) break;
+    }
+    if(!noFill && picked.length<targets[act-1]){
+      for(const card of CARDS.filter(c=>c.act===act)){
+        if(used.has(card.id)) continue;
+        picked.push(card.id); used.add(card.id);
+        if(picked.length>=targets[act-1]) break;
+      }
+    }
+    picked.forEach(id=>out.push(CARDS.find(c=>c.id===id)));
+  }
+  // 保证第一镜是钩子；CTA 只保留一个，并固定在最后
+  out.sort((a,b)=>a.act-b.act);
+  const CTA_IDS = ['end_look','direct_cta','sci_end'];
+  const ctaId = ctx.archetype==='science' ? 'sci_end' : (ctx.archetype==='direct' ? 'direct_cta' : 'end_look');
+  const filtered = out.filter(c=>!CTA_IDS.includes(c.id));
+  const ctaCard = CARDS.find(c=>c.id===ctaId);
+  if(ctaCard) filtered.push(ctaCard);
+  return filtered;
+}
+
+/* ---------- 时长分配 ---------- */
+function allocateDurations(shots, total){
+  const n = shots.length;
+  const min = Math.min(2.2, (total/n)*0.55);
+  const remain = Math.max(0, total - min*n);
+  const wsum = shots.reduce((a,s)=>a+(s.weight||1),0);
+  let t = 0;
+  shots.forEach((s,i)=>{
+    let d = min + remain*((s.weight||1)/wsum);
+    d = round1(d);
+    if(i===n-1) d = round1(total-t);
+    if(d<1.6) d=1.6;
+    s.start = t;
+    s.duration = d;
+    t = round1(t+d);
+    s.end = t;
+  });
+  shots[n-1].end = total;
+  shots[n-1].duration = round1(total-shots[n-1].start);
+  return shots;
+}
+
+/* ---------- 台词长度适配 ---------- */
+function fitLines(shots, duration){
+  const budget = duration * 3.1;
+  const len = s => cnLen(s.line);
+  let total = shots.reduce((a,s)=>a+len(s),0);
+  if(total<=budget) return {trimmed:false,total:Math.round(total),budget:Math.round(budget)};
+  // 先用短句替换长句
+  shots.forEach(s=>{
+    if(total<=budget) return;
+    if(s.lineShort && len(s)>16){
+      const old=len(s), nl=cnLen(s.lineShort);
+      if(nl<old){ s.line=s.lineShort; total-=(old-nl); }
+    }
+  });
+  // 再删中间非关键台词，保留第一句和最后一句
+  while(total>budget){
+    let idx=-1, max=0;
+    const speaking = shots.map((s,i)=>s.line?i:-1).filter(i=>i>=0);
+    const first = speaking[0], last = speaking[speaking.length-1];
+    shots.forEach((s,i)=>{
+      if(!s.line || i===first || i===last) return;
+      const l=len(s);
+      if(l>max){max=l; idx=i;}
+    });
+    if(idx<0) break;
+    total -= len(shots[idx]);
+    shots[idx].line='';
+    shots[idx].lineTrimmed=true;
+  }
+  return {trimmed:total<=budget,total:Math.round(total),budget:Math.round(budget)};
+}
+
+/* ---------- 组装镜头 ---------- */
+const BASE_NEG = 'no text, no letters, no subtitles, no logo, no watermark, no brand marks, no distorted hands, no extra fingers, no deformed face, no floating objects, no clipping, no luxury showroom, no Apple Store look, no exaggerated cartoon expressions, no oily advertising smile, no oversaturated colors';
+
+function resolveSubjects(card, ctx){
+  const keys = (card.subjects||[]).map(k=>k==='presenter'?ctx.presenterKey:k);
+  return uniq(keys).map(k=>CHARACTERS[k]).filter(Boolean);
+}
+
+function buildShot(card, ctx, timing){
+  const chars = resolveSubjects(card, ctx);
+  const subjectCN = chars.map(c=>String(c.cn).replace(/[。；;]\s*$/,'')).join('；');
+  const subjectEN = chars.map(c=>c.en).join(' ');
+  const sceneCN = card.scene ? (SCENES[card.scene]?.cn || '') : (card.sceneCN||'');
+  const sceneEN = card.scene ? (SCENES[card.scene]?.en || '') : (card.sceneEN||'');
+  const angle = ANGLES[card.angle]||ANGLES.eye;
+  const move = MOVES[card.move]||MOVES.static;
+  const light = LIGHTS[card.light]||LIGHTS.warmDay;
+  const style = ctx.style;
+  const refCN = ctx.hasRef && chars.length ? `严格参考${chars.map((c,i)=>`@图${i+1}中${c.name}`).join('、')}的脸型、发型与服装，全片保持一致。` : '';
+  const refEN = ctx.hasRef && chars.length ? `Use ${chars.map((c,i)=>`@图${i+1}`).join(' and ')} as strict character reference; keep the same face, hairstyle and outfit across all shots. ` : '';
+  const blankBadge = chars.some(c=>c.key==='staffF'||c.key==='staffM') ? 'The uniform chest badge stays blank with no readable logo or text. ' : '';
+  const blankSign = ['value_store','end_pullout','end_handshake','direct_cta','pain_trust'].includes(card.id) ? 'Any signboard stays blank with no lettering. ' : '';
+  const subjectBlock = subjectCN ? `${subjectCN}。` : '';
+  const promptCN = `${style.cn}。${refCN}${subjectBlock}${sceneCN}画面动作：${card.actionCN} 镜头：${card.mm}mm，${angle.cn}，${move.cn}。光线：${light.cn}。画质：4K，9:16竖屏，电影级细节，无文字、无logo、无水印。`;
+  const promptEN = `${style.en}. ${refEN}${subjectEN} Scene: ${sceneEN} Action: ${card.actionEN} Camera: ${card.mm}mm lens, ${angle.en}, ${move.en}. Lighting: ${light.en}. ${style.quality}. ${blankBadge}${blankSign}Vertical 9:16, 4K. No text, no letters, no subtitles, no logo, no watermark.`;
+  const negative = `${BASE_NEG}, ${style.negative}${card.negative?', '+card.negative:''}`;
+  const line = typeof card.line==='function' ? card.line(ctx) : (card.line||'');
+  const lineShort = SHORT_LINES[card.id] ? SHORT_LINES[card.id](ctx) : '';
+  return {
+    ...card, ...timing, chars, subjectCN, subjectEN, sceneCN, sceneEN,
+    line, lineShort, lineLabel:card.lineLabel||'—',
+    cameraCN:`${card.mm}mm · ${angle.cn} · ${move.cn}`,
+    cameraEN:`${card.mm}mm lens, ${angle.en}, ${move.en}`,
+    promptCN, promptEN, negative
+  };
+}
+
+/* ---------- 创意简报 ---------- */
+function makeMainTitle(ctx){
+  if(ctx.archetype==='science') return '电脑又吵又烫，先别急着换';
+  if(ctx.archetype==='comparison') return '同样修电脑，为什么隔壁店总有人进门？';
+  if(ctx.archetype==='mismatch') return '拍了一上午视频，为什么附近的人还是刷不到？';
+  if(ctx.archetype==='direct') return '开电脑维修店，这四件事别一个人扛';
+  if(ctx.audience.id==='multi') return '三家店管不过来，问题不在你不努力';
+  if(ctx.audience.id==='master') return '手艺再好，也得有人看见你';
+  if(ctx.audience.id==='cross') return '店还能再开几年？先把这件事想明白';
+  return '一个人守店，最难的不是手艺';
+}
+function makeTheme(ctx){
+  if(ctx.archetype==='mismatch') return `用一次“客户就在门口、却被线上别家截走”的擦肩，把${ctx.audience.name}最熟悉的无力感拍出来；不责怪老板，只让「${ctx.benefit.name}」成为被看见的那一步。`;
+  if(ctx.archetype==='comparison') return `不争论、不说教，用两个${ctx.audience.name}的经营状态做对照：一个越忙越薄，一个开始有系统；让观众自己得出结论。`;
+  if(ctx.archetype==='science') return `先用一个具体故障建立专业感，再用三维示意讲清“不是机器老了，是散热被堵住”，最后自然落到标准化服务。`;
+  if(ctx.archetype==='direct') return `不绕故事，${ctx.presenter.name}直接对镜头，把${ctx.audience.name}最关心的品牌、获客、备件、技术四件事讲清楚。`;
+  return `用「${ctx.benefit.pain.split('/')[0].trim()}」把${ctx.audience.name}的日常拍出来：先让他在故事里看到自己，再让「${ctx.benefit.name}」成为那条具体的出路。`;
+}
+function makeConflict(ctx){
+  if(ctx.archetype==='science') return `客户以为“又吵又烫”是电脑老了，第一反应是换机；真正的矛盾是散热被灰尘堵住，却没人把原理讲明白。`;
+  if(ctx.archetype==='comparison') return `同样的手艺、同样的街，隔壁同行开始有系统，主角还在靠一个人硬扛；差距不在技术，在经营方式。`;
+  if(ctx.archetype==='mismatch') return `主角认真拍视频、认真守店，客户也走到了门口，却在手机上被别家截走；努力和结果之间隔着一层“线上看不见”。`;
+  if(ctx.archetype==='direct') return `${ctx.audience.name}不是不努力，是品牌、获客、备件、技术四件事都压在一个身上，越扛越累。`;
+  return `${ctx.audience.name}技术不差、人也不懒，但客流、备件、技术、人员总有一头顾不过来；一个人扛得越久，越不敢停下来。`;
+}
+function makePayoff(ctx){
+  return `${ctx.benefit.core} ${ctx.benefit.line}`;
+}
+function makeEmotion(ctx){
+  return ARCHETYPES[ctx.archetype].emotion;
+}
+function buildBrief(ctx, shots, lineInfo){
+  const speaking = shots.filter(s=>s.line);
+  const keyLine = speaking.length ? speaking[Math.min(1,speaking.length-1)].line : '';
+  const cta = speaking.length ? speaking[speaking.length-1].line : '想了解怎么加入示例品牌，评论区留「品牌」。';
+  return {
+    title:makeMainTitle(ctx),
+    theme:makeTheme(ctx),
+    audience:ctx.audience.name,
+    audiencePain:ctx.audience.pain,
+    pain:ctx.benefit.pain,
+    benefit:ctx.benefit.name,
+    benefitShort:ctx.benefit.short,
+    conflict:makeConflict(ctx),
+    turn:makePayoff(ctx),
+    emotion:makeEmotion(ctx),
+    keyLine,
+    cta,
+    duration:ctx.duration,
+    shotCount:shots.length,
+    wordCount:lineInfo.total,
+    readTime:round1(lineInfo.total/3.1),
+    lineTrimmed:lineInfo.trimmed,
+    basis:[
+      ctx.benefit.proof,
+      `官方规模口径：${OFFICIAL_DATA.scale}`,
+      '语言规范：统一用「加入示例品牌 / 合作伙伴」，不使用合作类禁用词',
+      '数据铁律：不编百分比、不写无来源增长，效果只用定性描述'
+    ]
+  };
+}
+
+function buildProject(input){
+  const ctx = parseInput(input);
+  const cards = selectCards(ctx);
+  const shots = cards.map(c=>buildShot(c, ctx, {start:0,duration:0,end:0}));
+  allocateDurations(shots, ctx.duration);
+  const lineInfo = fitLines(shots, ctx.duration);
+  const brief = buildBrief(ctx, shots, lineInfo);
+  return { ctx, shots, brief, lineInfo, generatedAt:new Date().toISOString() };
+}
+/* ============================================================
+   生成引擎 B：标题 / 封面 / 角色资产 / 合规 / 导出
+   ============================================================ */
+
+const TITLE_BANK = {
+  online:[
+    '同行们，客户在网上搜“附近维修”，为什么总是搜不到你？',
+    '你们店里，是不是也拍了很多视频，却没人加到微信？',
+    '大家有没有发现，隔壁店技术一般，客户却总比他多？',
+    '说实话，拍了一上午视频，播放量还是个位数，问题出在哪？',
+    '同行们，客户都走到门口了，为什么还会转身去别家？'
+  ],
+  supply:[
+    '同行们，配件贵、调货慢，你们是不是也被这两件事拖过？',
+    '大家店里，是不是也压着一堆用不上、急用又没有的配件？',
+    '你们说，客户等着取机，配件却要三天，这单还怎么留？',
+    '同行们，备件成本一直降不下来，问题到底出在哪？'
+  ],
+  tech:[
+    '同行们，遇到搞不定的机型，你们是硬扛还是找人？',
+    '大家有没有过，一台疑难机修到半夜，还是没把握？',
+    '你们店里，返修一次要赔多少时间和口碑？',
+    '同行们，技术再好，一个人能扛多少种机型？'
+  ],
+  talent:[
+    '大家店里，师傅走了以后，活是谁在干？',
+    '同行们，招人难、留人更难，你们是不是也卡在这？',
+    '你们说，店里生意还行，为什么就是不敢多接活？',
+    '大家有没有发现，真正限制门店的，往往是没人上手？'
+  ],
+  image:[
+    '你们觉得，门头旧一点，真的会影响客户进店吗？',
+    '同行们，客户看一眼就走，问题真的只是价格吗？',
+    '大家有没有发现，同样一条街，规范的店更容易被信任？',
+    '你们店里，客户进门第一眼看到的是什么？'
+  ],
+  trust:[
+    '同行们，客户进门先问“你们正规吗”，你们怎么回答？',
+    '大家有没有发现，客户不是不修，是不敢把电脑交给你？',
+    '你们说，小店和品牌店之间，差的到底是一块招牌吗？',
+    '同行们，客户凭什么第一次就把电脑交给你？'
+  ],
+  service:[
+    '大家店里，是不是也有那种修一次就再也不来的客户？',
+    '同行们，客户取机时说“还行”，为什么下次不来了？',
+    '你们说，服务到底差在哪一步，客户才不愿意回头？',
+    '大家有没有想过，复购不是靠便宜，是靠什么？'
+  ],
+  event:[
+    '同行们，一个人摸索和一群人交流，你们选哪个？',
+    '大家有没有发现，很多弯路，同行早就走过了？',
+    '你们说，门店做不下去，是能力问题还是信息问题？',
+    '同行们，多久没有跟一群同行坐下来聊聊了？'
+  ],
+  brand:[
+    '同行们，客户问“你们是正规的吗”，你们心里有底吗？',
+    '大家有没有发现，有品牌背书的店，客户更容易先信？',
+    '你们说，品牌背书旗下的招牌，对一家社区店意味着什么？',
+    '同行们，客户第一次进门，凭什么先信你？'
+  ]
+};
+
+const AUDIENCE_TITLES = {
+  single:['单店老板们，一个人守店，最怕的是不是没客人？','你们说，一个人守店，最难的是手艺还是经营？'],
+  master:['维修师傅们，技术再好，一个人能扛多少种机型？','你们说，手艺好的人，为什么反而更难把店做大？'],
+  cross:['想转行的朋友们，店还能再开几年，你们想过吗？','你们说，跨界开店，最怕的是不是没人带？'],
+  multi:['多店老板们，三家店管不过来，你们是不是也在救火？','你们说，店越开越多，为什么人越来越累？']
+};
+
+const ARCHETYPE_TITLES = {
+  dilemma:['一个人守店十几年，你们有没有想过换个做法？','店开着、人守着，客户到底去哪了？'],
+  mismatch:['客户都走到门口了，为什么还会转身去别家？','你们认真拍的视频，为什么附近的人刷不到？'],
+  comparison:['同样的手艺、同样的街，为什么结果不一样？','同行们，你有没有算过，自己到底在为什么忙？'],
+  science:['电脑又吵又烫，你们第一反应是不是换新机？','风扇一直响，真的只是电脑老了吗？'],
+  direct:['同行们，开维修店这四件事，你们是不是都在自己扛？','你们说，品牌、获客、备件、技术，哪一件最头疼？']
+};
+
+const GENERIC_TITLES = [
+  '同行们，一个人守店，最难的是不是没客人？',
+  '你们说，店开着、人守着，客户到底去哪了？',
+  '大家有没有想过，手艺和生意，其实是两件事？',
+  '同行们，如果重来一次，你还会一个人硬扛吗？',
+  '大家店里，最让你睡不着的是客流还是人手？'
+];
+
+function generateTitles(ctx){
+  const audiencePool = AUDIENCE_TITLES[ctx.audience.id] || [];
+  const archetypePool = ARCHETYPE_TITLES[ctx.archetype] || [];
+  const benefitPool = TITLE_BANK[ctx.benefit.id] || [];
+  const pool = ctx.audience.id==='multi'
+    ? [...audiencePool, ...benefitPool, ...archetypePool, ...GENERIC_TITLES]
+    : [...archetypePool, ...benefitPool, ...audiencePool, ...GENERIC_TITLES];
+  const seen = new Set();
+  const out = [];
+  pool.forEach(t=>{
+    if(seen.has(t)) return;
+    seen.add(t);
+    const len = t.length;
+    const hasQuestion = /[？?]/.test(t);
+    const hasColloquial = /你们|大家|同行|老板们|朋友/.test(t);
+    if(len>=15 && len<=40 && hasQuestion && hasColloquial) out.push({text:t,len,ok:true});
+  });
+  // 不足 6 条时放宽长度限制补齐
+  if(out.length<6){
+    pool.forEach(t=>{
+      if(out.length>=6) return;
+      if(seen.has(t) && out.some(o=>o.text===t)) return;
+      if(/[？?]/.test(t) && /你们|大家|同行|老板们|朋友/.test(t)){
+        seen.add(t); out.push({text:t,len:t.length,ok:t.length>=15&&t.length<=40});
+      }
+    });
+  }
+  return out.slice(0,6);
+}
+
+const COVERS = {
+  online:{main:'不是没人修',sub:'是附近的人没看见你'},
+  supply:{main:'配件贵又慢',sub:'问题不在你的手艺'},
+  tech:{main:'一个人扛',sub:'背后得有技术团队'},
+  talent:{main:'店有了',sub:'人却留不住'},
+  image:{main:'门头旧了',sub:'客户第一眼就走了'},
+  trust:{main:'客户不是不修',sub:'是不敢交给你'},
+  service:{main:'修好一次',sub:'怎么让他再来'},
+  event:{main:'一个人摸索',sub:'不如一群人交流'},
+  brand:{main:'客户先信你',sub:'生意才好谈'}
+};
+function generateCover(ctx){
+  let c = COVERS[ctx.benefit.id] || COVERS.online;
+  if(ctx.archetype==='science') c = {main:'又吵又烫',sub:'先别急着换电脑'};
+  if(ctx.archetype==='comparison') c = {main:'同样修电脑',sub:'为什么结果不一样'};
+  if(ctx.archetype==='mismatch') c = {main:'客户在门口',sub:'却被线上截走'};
+  if(ctx.archetype==='direct') c = {main:'四件事',sub:'别一个人扛'};
+  return {...c, tag:`${ctx.audience.name} · ${ctx.platform.name}`, note:'封面文字建议后期排版，不要让AI生成中文；主标题不超过10字，副标题不超过18字。'};
+}
+
+/* ---------- 角色资产 ---------- */
+function buildAssets(shots, ctx){
+  const keys = uniq(shots.flatMap(s=>s.chars.map(c=>c.key)));
+  if(ctx.hero && !keys.includes(ctx.hero.key)) keys.unshift(ctx.hero.key);
+  return keys.map(k=>{
+    const c = CHARACTERS[k];
+    if(!c) return null;
+    const promptCN = `角色定妆照：${c.cn} 正面半身与45度侧面各一张，纯浅灰背景，柔和棚拍光，自然表情，双手自然放松，无文字、无logo、无水印，4K，9:16竖屏。`;
+    const promptEN = `Character reference sheet, ${c.en} Front half-body view and 45-degree profile, plain light grey background, soft studio lighting, neutral expression, hands relaxed, no text, no logo, no watermark, 4K, vertical 9:16.`;
+    return {...c, promptCN, promptEN};
+  }).filter(Boolean);
+}
+
+/* ---------- 合规体检 ---------- */
+function addCheck(items, level, title, detail){
+  items.push({level,title,detail});
+}
+function countMatches(text, re){
+  const r = new RegExp(re.source, re.flags.includes('g')?re.flags:re.flags+'g');
+  return (text.match(r)||[]).length;
+}
+function runCompliance(project, extras){
+  const {ctx, brief, shots} = project;
+  const titles = extras.titles||[];
+  const cover = extras.cover||{main:'',sub:''};
+  const cnText = [
+    brief.title, brief.theme, brief.conflict, brief.turn, brief.emotion, brief.keyLine, brief.cta,
+    ...shots.map(s=>s.line||''),
+    ...titles.map(t=>t.text),
+    cover.main, cover.sub
+  ].join('\n');
+  const items = [];
+
+  // 1 语言规范
+  const bannedHits = [];
+  BANNED_REPLACEMENTS.forEach(r=>{
+    const re = new RegExp(r.re.source,'g');
+    const m = cnText.match(re);
+    if(m) bannedHits.push(...m);
+  });
+  if(bannedHits.length){
+    addCheck(items,'err','语言规范',`检测到禁用词：${uniq(bannedHits).join('、')}。请改为「加入示例品牌 / 合作伙伴 / 达成合作」。`);
+  }else{
+    addCheck(items,'ok','语言规范','未出现语言规范中的合作类禁用词。');
+  }
+
+  // 2 数字与数据
+  const numRe = /(\d+(?:\.\d+)?)/g;
+  const allowed = [
+    /29\s*省/, /200\+\s*城市/, /1000\+?\s*(家|门店)/, /600\+/, /12\s*-\s*15\s*个月/,
+    /3\s*年/, /3\s*步/, /24\s*mm/, /35\s*mm/, /50\s*mm/, /85\s*mm/, /4K/, /9:16/,
+    /1\s*年/, /6\s*-\s*8\s*个月/, /2026/, /30\s*秒/, /45\s*秒/, /60\s*秒/, /90\s*秒/, /500\s*强/
+  ];
+  const unknownNums = [];
+  let m;
+  while((m=numRe.exec(cnText))!==null){
+    const idx=m.index, val=m[1];
+    const context=cnText.slice(Math.max(0,idx-10), idx+val.length+10);
+    if(!allowed.some(re=>re.test(context))) unknownNums.push({val,context:context.replace(/\n/g,' ')});
+  }
+  if(unknownNums.length){
+    addCheck(items,'warn','数字需核对',`发现 ${unknownNums.length} 处未在官方口径内的数字：${unknownNums.slice(0,3).map(x=>`「${x.val}」（${x.context}）`).join('、')}。请按总部最新数据核对，或改成定性描述。`);
+  }else{
+    addCheck(items,'ok','数字与数据','未发现无来源数字；规模数据仅使用多城市 · 多门店（示例）等官方口径。');
+  }
+  addCheck(items,'ok','数据口径','演示版不校验具体经营数据；正式使用请以品牌方最新口径为准。');
+
+
+  // 3 效果承诺
+  if(/(提升|降低|增长|增加|翻倍|多赚|少花|省下)[^。！？\n]{0,10}(\d|%|％|倍)/.test(cnText)){
+    addCheck(items,'err','效果承诺','检测到“提升/降低/增长+数字”的表达。知识库禁止无来源效果百分比，请改成定性描述（客流更稳定、利润空间更大）。');
+  }else{
+    addCheck(items,'ok','效果承诺','未出现无来源的提升/降低百分比；效果使用定性描述。');
+  }
+  if(/[%％]/.test(cnText)){
+    addCheck(items,'err','百分比','正文出现百分号。除非总部最新口径明确，否则不要写百分比。');
+  }else{
+    addCheck(items,'ok','百分比','正文未出现百分比。');
+  }
+  if(/(保证|稳赚|包回本|零风险|躺赚|必赚|一定赚|包您满意)/.test(cnText)){
+    addCheck(items,'warn','高风险承诺','出现保证/稳赚/包回本等承诺型表达，建议删除或改为“按实际经营情况测算”。');
+  }else{
+    addCheck(items,'ok','高风险承诺','未出现承诺型、保证型表达。');
+  }
+  if(/(免费|0门槛|零成本|零投入)/.test(cnText)){
+    addCheck(items,'warn','政策口径','出现免费/0门槛/零成本等表达，发布前需按总部最新合作政策确认，避免过期口径。');
+  }else{
+    addCheck(items,'ok','政策口径','未使用易过期的政策口径。');
+  }
+
+  // 4 Prompt 红线
+  const promptBad = shots.filter(s=>!/no text/i.test(s.promptEN) || !/no watermark/i.test(s.promptEN) || !/no logo/i.test(s.promptEN));
+  if(promptBad.length){
+    addCheck(items,'err','Prompt 负向约束',`有 ${promptBad.length} 个镜头缺少 no text / no logo / no watermark 约束。`);
+  }else{
+    addCheck(items,'ok','Prompt 负向约束','全部镜头均包含 no text / no logo / no watermark，品牌文字后期叠加。');
+  }
+  const brandTextCards = shots.filter(s=>s.post && /LOGO|文字|界面|标签|门头/.test(s.post));
+  if(brandTextCards.length){
+    addCheck(items,'ok','品牌文字后期',`${brandTextCards.length} 个镜头标注了品牌文字/界面/LOGO后期叠加，AI 不生成可读文字。`);
+  }
+  if(shots.some(s=>/signboard|门头/i.test(s.promptEN+s.promptCN))){
+    addCheck(items,'ok','门头结构','门头镜头已要求空白底板，文字与LOGO后期叠加，避免AI改建筑结构。');
+  }
+
+  // 5 人物一致性
+  if(ctx.hasRef){
+    const missing = shots.filter(s=>s.chars.length && !/@图/.test(s.promptCN));
+    if(missing.length) addCheck(items,'warn','人物一致性',`有 ${missing.length} 个带人物的镜头未写 @图 引用，请补齐参考图编号。`);
+    else addCheck(items,'ok','人物一致性','已开启参考图模式，人物镜头均要求 @图 严格一致。');
+  }else{
+    addCheck(items,'warn','人物一致性','未开启参考图模式。建议先用定妆图固定角色，再在每个镜头用 @图1/@图2 引用，避免AI换脸。');
+  }
+
+  // 6 平台与发布
+  addCheck(items,'ok','尾板口径',`尾板固定文案：${TAIL_LINE}。请按总部最新口径复核“示例回本周期”。`);
+  addCheck(items,'ok','话题标签',`已内置：${ctx.platform.tags.join(' ')}。结尾固定加 #示例品牌#电脑维修。`);
+  addCheck(items,'ok','画幅与清晰度',`${ctx.platform.ratio}，4K 输出；AI 单镜生成后按时间轴后期拼接。`);
+
+  // 7 版权
+  if(ctx.styleId==='anim3d'){
+    addCheck(items,'warn','版权规避','3D动画电影风为原创风格，请勿使用受版权保护的动画IP名，也不复刻具体角色形象。');
+  }else{
+    addCheck(items,'ok','版权规避','未使用受版权保护的IP名称或具体角色形象。');
+  }
+
+  // 8 知识库
+  if(KB_STATE.loaded){
+    if(KB_STATE.conflicts.length){
+      addCheck(items,'warn','知识库冲突',`本地知识库中发现旧数据（${uniq(KB_STATE.conflicts).join('、')}），工具已按数据铁律屏蔽，生成时请以多家门店口径为准。`);
+    }else{
+      addCheck(items,'ok','知识库','已读取本地知识库，未发现与数据铁律冲突的旧数据。');
+    }
+  }else{
+    addCheck(items,'warn','知识库','当前使用内置提炼版知识库。建议导入本地知识库文件夹，补充最新利益点与依据。');
+  }
+
+  const errors = items.filter(i=>i.level==='err').length;
+  const warnings = items.filter(i=>i.level==='warn').length;
+  const passes = items.filter(i=>i.level==='ok').length;
+  let score = 100 - errors*18 - warnings*4;
+  score = Math.max(40, Math.min(100, score));
+  return {score, items, errors, warnings, passes};
+}
+
+/* ---------- 发布建议 ---------- */
+function buildPublish(ctx, titles, cover){
+  const timeMap = {
+    douyin:'首选 10:00-11:00（爆款集中），次选 17:00-18:00，日常 12:00-14:00；避开 5:00-9:00。',
+    channels:'首选 12:00-14:00 或 20:00-22:00（熟人社交时段），次选 10:00-11:00。',
+    xhs:'首选 19:00-22:00，次选 12:00-14:00；封面标题比视频更重要。',
+    kuaishou:'首选 17:00-19:00，次选 12:00-14:00；开头3秒直接说人话。'
+  };
+  return {
+    titles,
+    cover,
+    hashtags:ctx.platform.tags,
+    fixedTags:'#示例品牌#电脑维修',
+    time:timeMap[ctx.platformId]||timeMap.douyin,
+    commentCTA:'想了解怎么加入示例品牌，评论区留「品牌」，我发你一份门店经营测算。',
+    postNotes:[
+      '发布前把门头、工服、手机屏幕、尾板文字全部后期叠加，不要让AI生成中文。',
+      '同一角色先用定妆图固定，再逐镜图生视频；每镜生成 2-3 条选最佳。',
+      '剪辑节奏：钩子 0-3 秒必须出现人物或冲突；每 3-5 秒换一次景别；结尾留 2 秒尾板。',
+      '评论区置顶：想了解怎么加入示例品牌，评论区留「品牌」。',
+      '数据回看：发布后 2 小时看 3 秒留存，24 小时看加微/私信，7 天看线索质量。'
+    ]
+  };
+}
+
+/* ---------- 豆包整包 ---------- */
+function buildDoubaoPackage(project, extras, pure){
+  const {ctx, brief, shots} = project;
+  if(pure){
+    return shots.map((s,i)=>`${pad2(i+1)}｜${fmtTime(s.start)}–${fmtTime(s.end)}s｜${s.cameraCN}\n${s.promptCN}`).join('\n\n');
+  }
+  const lines = [];
+  lines.push(`【豆包整包｜${brief.title}】`);
+  lines.push('使用方式：请按镜号逐条生成，每次只生成一镜，不要把多个镜头合并。每镜生成2-3条，选动作最自然、手部最稳的一条。所有文字、LOGO、手机屏幕内容一律后期叠加，不要让AI生成。');
+  lines.push('');
+  lines.push('【全片设定】');
+  lines.push(`${ctx.duration}秒｜${ctx.platform.ratio}｜4K｜${ctx.style.name}`);
+  lines.push(`叙事模型：${ctx.archetypeName}｜目标人群：${ctx.audience.name}｜核心利益点：${ctx.benefit.name}`);
+  lines.push(`地点：${ctx.city ? ctx.city + ' · ' : ''}${ctx.shopName}`);
+  lines.push('人物一致性：同一角色全片保持同一张脸、同一发型、同一套服装；每镜都重复人物资产描述。');
+  const negAll = uniq((BASE_NEG+', '+ctx.style.negative).split(',').map(x=>x.trim())).join(', ');
+  lines.push(`全片负向：${negAll}`);
+  lines.push('');
+  lines.push('【角色资产（逐镜复用，禁止改写）】');
+  (extras.assets||[]).forEach(a=>lines.push(`- ${a.name}（${a.role}）：${a.cn}`));
+  lines.push('');
+  lines.push('【分镜】');
+  shots.forEach((s,i)=>{
+    lines.push(`${pad2(i+1)}｜${fmtTime(s.start)}–${fmtTime(s.end)}s｜${s.cameraCN}`);
+    lines.push(`中文提示词：${s.promptCN}`);
+    lines.push(`台词/旁白：${s.line ? `${s.lineLabel}：${s.line}` : '无（此镜留白）'}`);
+    lines.push(`音效/BGM：${s.sound}`);
+    if(s.fx && s.fx!=='—') lines.push(`字效：${s.fx}`);
+    if(s.post) lines.push(`后期：${s.post}`);
+    lines.push('');
+  });
+  lines.push('【剪辑与尾板】');
+  lines.push('- 按镜号顺序拼接；每镜生成后选动作最自然的一条，再按时间轴对齐。');
+  lines.push(`- 尾板：${TAIL_LINE}（后期叠加）。`);
+  lines.push('- 门头、工服、手机屏幕、尾板文字一律后期叠加，不要让AI生成中文。');
+  return lines.join('\n');
+}
+/* ---------- Markdown / JSON ---------- */
+function buildMarkdown(project, extras){
+  const {ctx, brief, shots} = project;
+  const {titles, cover, assets, compliance} = extras;
+  const fence = '```';
+  const lines = [];
+  lines.push(`# ${brief.title}`);
+  lines.push('');
+  lines.push(`> AI 视频导演台 · v${APP_VERSION} · 本地知识库版`);
+  lines.push(`> 生成时间：${new Date().toLocaleString('zh-CN',{hour12:false})}`);
+  lines.push(`> 视频规格：${ctx.duration}秒 · ${ctx.platform.ratio} · ${ctx.platform.name} · ${ctx.style.name}`);
+  lines.push(`> 叙事模型：${ctx.archetypeName} ｜ 目标人群：${ctx.audience.name} ｜ 核心利益点：${ctx.benefit.name}`);
+  lines.push('');
+  lines.push('## 一、创意简报');
+  lines.push('');
+  lines.push('| 项目 | 内容 |');
+  lines.push('|---|---|');
+  lines.push(`| 一句话主题 | ${brief.title} |`);
+  lines.push(`| 创作意图 | ${brief.theme} |`);
+  lines.push(`| 目标人群 | ${brief.audience}：${brief.audiencePain} |`);
+  lines.push(`| 核心痛点 | ${brief.pain} |`);
+  lines.push(`| 核心利益点 | ${brief.benefit}：${brief.benefitShort} |`);
+  lines.push(`| 核心冲突 | ${brief.conflict} |`);
+  lines.push(`| 转折与兑现 | ${brief.turn} |`);
+  lines.push(`| 情绪曲线 | ${brief.emotion} |`);
+  lines.push(`| 关键台词 | ${brief.keyLine||'—'} |`);
+  lines.push(`| 结尾行动 | ${brief.cta} |`);
+  lines.push(`| 镜头数 / 字数 | ${brief.shotCount} 镜 / 约 ${brief.wordCount} 字（口播约 ${brief.readTime} 秒） |`);
+  lines.push('');
+  lines.push('## 二、口播脚本');
+  lines.push('');
+  lines.push('| 时间 | 段落 | 台词/旁白 | 画面 | 音效/BGM | 字效 |');
+  lines.push('|---|---|---|---|---|---|');
+  let lastAct = 0;
+  shots.forEach((s,i)=>{
+    if(s.act!==lastAct){
+      lines.push(`| — | **${s.actName}** | — | — | — | — |`);
+      lastAct=s.act;
+    }
+    lines.push(`| ${fmtTime(s.start)}–${fmtTime(s.end)}s | 镜${pad2(i+1)} | ${s.line?`${s.lineLabel}：${s.line}`:'—'} | ${truncate(s.actionCN,64)} | ${s.sound} | ${s.fx} |`);
+  });
+  lines.push('');
+  lines.push('## 三、分镜 Prompt');
+  lines.push('');
+  lines.push('> 使用方式：每镜单独生成 → 后期按时间轴拼接。中文 Prompt 适合即梦/可灵/海螺；English 适合 Runway/Veo/Sora/Pika。');
+  lines.push('');
+  shots.forEach((s,i)=>{
+    lines.push(`### 镜${pad2(i+1)}｜${fmtTime(s.start)}–${fmtTime(s.end)}s｜${s.cameraCN}`);
+    lines.push('');
+    lines.push(`- **画面**：${s.actionCN}`);
+    lines.push(`- **台词**：${s.line?`${s.lineLabel}：${s.line}`:'—（此镜留白，靠画面和音效推进）'}`);
+    lines.push(`- **音效/BGM**：${s.sound}`);
+    lines.push(`- **字效**：${s.fx}`);
+    if(s.post) lines.push(`- **后期叠加**：${s.post}`);
+    lines.push('');
+    lines.push('**中文 Prompt**');
+    lines.push('');
+    lines.push(fence+'text');
+    lines.push(s.promptCN);
+    lines.push(fence);
+    lines.push('');
+    lines.push('**English Prompt**');
+    lines.push('');
+    lines.push(fence+'text');
+    lines.push(s.promptEN);
+    lines.push(fence);
+    lines.push('');
+    lines.push(`**负向约束**：${s.negative}`);
+    lines.push('');
+  });
+  lines.push('## 四、角色资产（逐镜复用，禁止改写）');
+  lines.push('');
+  assets.forEach(a=>{
+    lines.push(`### ${a.name}｜${a.role}`);
+    lines.push('');
+    lines.push(`**中文资产**：${a.cn}`);
+    lines.push('');
+    lines.push(`**English Asset**：${a.en}`);
+    lines.push('');
+    lines.push(`**定妆图 Prompt（中文）**：${a.promptCN}`);
+    lines.push('');
+    lines.push(`**Character Sheet Prompt（English）**：${a.promptEN}`);
+    lines.push('');
+  });
+  lines.push('### 一致性执行清单');
+  lines.push('');
+  lines.push('- [ ] 每个角色先生成定妆图，固定脸型、发型、服装。');
+  lines.push('- [ ] 后续镜头用 @图1 / @图2 引用，不要重新描述成另一个人。');
+  lines.push('- [ ] 同一场景的布局、道具、光线方向保持一致。');
+  lines.push('- [ ] 门头、工服、手机屏幕、尾板文字全部后期叠加。');
+  lines.push('- [ ] 4K、9:16 竖屏统一输出。');
+  lines.push('');
+  lines.push('## 五、发布包');
+  lines.push('');
+  lines.push('### 标题（6 选 1）');
+  lines.push('');
+  titles.forEach((t,i)=>lines.push(`${i+1}. ${t.text}（${t.len}字${t.ok?'':'，建议再压到15-40字'}）`));
+  lines.push('');
+  lines.push('### 封面');
+  lines.push('');
+  lines.push(`- 主标题：${cover.main}`);
+  lines.push(`- 副标题：${cover.sub}`);
+  lines.push(`- 角标：${cover.tag}`);
+  lines.push(`- 备注：${cover.note}`);
+  lines.push('');
+  lines.push('### 话题');
+  lines.push('');
+  lines.push(ctx.platform.tags.join(' '));
+  lines.push('');
+  lines.push('### 发布时间');
+  lines.push('');
+  lines.push(ctx.platform.name + '：' + buildPublish(ctx,titles,cover).time);
+  lines.push('');
+  lines.push('### 评论区引导');
+  lines.push('');
+  lines.push(buildPublish(ctx,titles,cover).commentCTA);
+  lines.push('');
+  lines.push('### 发布与制作提醒');
+  lines.push('');
+  buildPublish(ctx,titles,cover).postNotes.forEach(n=>lines.push(`- ${n}`));
+  lines.push('');
+  lines.push('## 六、合规体检');
+  lines.push('');
+  lines.push(`**得分：${compliance.score}/100**（${compliance.errors} 个错误，${compliance.warnings} 个提醒）`);
+  lines.push('');
+  compliance.items.forEach(i=>{
+    lines.push(`- ${i.level==='ok'?'✅':i.level==='warn'?'⚠️':'❌'} **${i.title}**：${i.detail}`);
+  });
+  lines.push('');
+  lines.push('## 七、尾板与后期');
+  lines.push('');
+  lines.push(`- 尾板固定文案：${TAIL_LINE}`);
+  lines.push('- 尾板 LOGO：示例品牌 LOGO（后期叠加）');
+  lines.push('- 门店地址/联系方式：如需展示，后期叠加文字，AI 不生成');
+  lines.push('- 字幕：统一使用品牌字体，关键词加粗；数字与政策口径发布前复核');
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+  lines.push('*由「AI 视频导演台」生成。知识来源：本地知识库 · 示例业务 · ai-video-prompt Skill · 8大门店合作利益点 · 数据与语言铁律。*');
+  return lines.join('\n');
+}
+
+function buildJSON(project, extras){
+  return JSON.stringify({
+    app:'AI 视频导演台',
+    version:APP_VERSION,
+    generatedAt:project.generatedAt,
+    input:project.ctx.rawOriginal,
+    context:{
+      archetype:project.ctx.archetype,
+      archetypeName:project.ctx.archetypeName,
+      style:project.ctx.styleId,
+      styleName:project.ctx.style.name,
+      duration:project.ctx.duration,
+      platform:project.ctx.platformId,
+      platformName:project.ctx.platform.name,
+      audience:project.ctx.audience.name,
+      benefit:project.ctx.benefit.name,
+      city:project.ctx.city,
+      shopName:project.ctx.shopName,
+      hasRef:project.ctx.hasRef
+    },
+    brief:project.brief,
+    shots:project.shots.map(s=>({
+      id:s.id, act:s.act, actName:s.actName, start:s.start, end:s.end, duration:s.duration,
+      camera:s.cameraCN, mm:s.mm, angle:s.angle, move:s.move,
+      subjects:s.chars.map(c=>c.name), visual:s.actionCN, line:s.line, lineLabel:s.lineLabel,
+      sound:s.sound, fx:s.fx, post:s.post,
+      promptCN:s.promptCN, promptEN:s.promptEN, negative:s.negative
+    })),
+    assets:extras.assets,
+    publish:{
+      titles:extras.titles, cover:extras.cover, hashtags:project.ctx.platform.tags,
+      commentCTA:'想了解怎么加入示例品牌，评论区留「品牌」，我发你一份门店经营测算。'
+    },
+    compliance:extras.compliance
+  }, null, 2);
+}
+/* ============================================================
+   界面层 A：状态 / 生成 / 简报 / 脚本 / 分镜
+   ============================================================ */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+const DRAFT_KEY = 'byai_video_draft_v1';
+const PROJECTS_KEY = 'byai_video_projects_v1';
+
+const KB_STATE = {
+  loaded:false, files:[], chars:0, benefitHits:{}, excerpts:{},
+  dataPoints:[], conflicts:[], dirs:[], loadedAt:null
+};
+
+let STATE = {
+  project:null,
+  extras:null,
+  activeTab:'brief',
+  lastInput:null
+};
+let PENDING_TAB = null;
+let LAST_IDEA = '';
+
+function readInputs(){
+  return {
+    idea: $('#idea').value,
+    audience: $('#fAudience').value,
+    archetype: $('#fArchetype').value,
+    style: $('#fStyle').value,
+    duration: $('#fDuration').value,
+    platform: $('#fPlatform').value,
+    hero: $('#fHero').value,
+    city: $('#fCity').value.trim(),
+    shop: $('#fShop').value.trim(),
+    hasRef: $('#fRef').checked
+  };
+}
+
+function fillInputs(input){
+  if(!input) return;
+  if(input.idea!=null) $('#idea').value = input.idea;
+  if(input.audience) $('#fAudience').value = input.audience;
+  if(input.archetype) $('#fArchetype').value = input.archetype;
+  if(input.style) $('#fStyle').value = input.style;
+  if(input.duration) $('#fDuration').value = input.duration;
+  if(input.platform) $('#fPlatform').value = input.platform;
+  if(input.hero) $('#fHero').value = input.hero;
+  if(input.city!=null) $('#fCity').value = input.city;
+  if(input.shop!=null) $('#fShop').value = input.shop;
+  $('#fRef').checked = !!input.hasRef;
+  updateIdeaCount();
+}
+
+function updateIdeaCount(){
+  const n = $('#idea').value.length;
+  $('#ideaCount').textContent = `${n} 字`;
+}
+
+async function generate(){
+  const input = readInputs();
+  if(input.idea !== LAST_IDEA){ VARIANT = 0; LAST_IDEA = input.idea; }
+  if(input.idea.trim().length < 6){
+    toast('先用一句话说说你想拍什么');
+    $('#idea').focus();
+    return;
+  }
+  const btn = $('#generateBtn');
+  btn.disabled = true;
+  const original = btn.innerHTML;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v4m0 10v4M3 12h4m10 0h4M5.6 5.6l2.8 2.8m7.2 7.2 2.8 2.8m0-12.8-2.8 2.8m-7.2 7.2-2.8 2.8"/></svg> 正在拆解…';
+  await new Promise(r=>setTimeout(r,40));
+  try{
+    const project = buildProject(input);
+    const titles = generateTitles(project.ctx);
+    const cover = generateCover(project.ctx);
+    const assets = buildAssets(project.shots, project.ctx);
+    const extras = { titles, cover, assets };
+    extras.compliance = runCompliance(project, extras);
+    extras.publish = buildPublish(project.ctx, titles, cover);
+    STATE.project = project;
+    STATE.extras = extras;
+    STATE.lastInput = input;
+    renderAll();
+    if(PENDING_TAB){ setTab(PENDING_TAB); PENDING_TAB = null; }
+    $('#emptyState').classList.add('hidden');
+    $('#result').classList.add('show');
+    window.scrollTo({top:0,behavior:'smooth'});
+    saveDraft();
+    toast('已生成：' + project.brief.shotCount + ' 个镜头');
+  }catch(err){
+    console.error(err);
+    toast('生成失败：' + (err.message||'请检查输入'));
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
+function renderAll(){
+  if(!STATE.project) return;
+  renderHeader();
+  renderBrief();
+  renderScript();
+  renderShots();
+  renderAssets();
+  renderPublish();
+  renderCheck();
+  renderKB();
+  setTab(STATE.activeTab);
+}
+
+function renderHeader(){
+  const {ctx, brief} = STATE.project;
+  const {compliance} = STATE.extras;
+  $('#resultKicker').textContent = `AI VIDEO BLUEPRINT · ${ctx.archetypeName}`;
+  $('#resultTitle').textContent = brief.title;
+  $('#resultSub').textContent = `${brief.audience} · ${brief.pain} → ${brief.benefit}。${brief.theme}`;
+  $('#metaRow').innerHTML = [
+    `<span class="meta"><b>${ctx.duration}s</b> 时长</span>`,
+    `<span class="meta"><b>${ctx.platform.ratio}</b></span>`,
+    `<span class="meta"><b>${ctx.platform.name}</b> 发布</span>`,
+    `<span class="meta"><b>${ctx.style.name}</b></span>`,
+    `<span class="meta"><b>${brief.shotCount}</b> 镜</span>`,
+    `<span class="meta">口播约 <b>${brief.wordCount}</b> 字</span>`,
+    `<span class="meta">合规 <b>${compliance.score}</b> 分</span>`,
+    VARIANT>0 ? `<span class="meta">第 <b>${VARIANT+1}</b> 版</span>` : ''
+  ].join('');
+  document.title = `${brief.title} · AI 视频导演台`;
+}
+
+function excerptFor(benefitId){
+  const list = KB_STATE.excerpts[benefitId] || [];
+  if(!list.length) return '';
+  return list.slice(0,2).map(x=>`<div class="excerpt"><b>${esc(x.file)}</b>${esc(x.text)}</div>`).join('');
+}
+
+function renderBrief(){
+  const {ctx, brief} = STATE.project;
+  const excerpt = excerptFor(ctx.benefit.id);
+  const html = `
+    <div class="card">
+      <div class="card-title">
+        <h3><span class="dot"></span>一句话创意</h3>
+        <span class="pill cyan">${esc(ctx.archetypeName)}</span>
+      </div>
+      <p class="brief-line">${esc(brief.theme)}</p>
+      <div class="grid-4 mt16">
+        <div class="stat"><div class="k">目标人群</div><div class="v">${esc(brief.audience)}<br><small>${esc(brief.audiencePain)}</small></div></div>
+        <div class="stat"><div class="k">核心痛点</div><div class="v">${esc(brief.pain)}</div></div>
+        <div class="stat"><div class="k">核心利益点</div><div class="v">${esc(brief.benefit)}<br><small>${esc(brief.benefitShort)}</small></div></div>
+        <div class="stat"><div class="k">情绪曲线</div><div class="v" style="font-size:11.5px;line-height:1.6">${esc(brief.emotion)}</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>故事骨架</h3><span class="hint">先让人看到自己，再让他看到出路</span></div>
+      <div class="grid-2">
+        <div class="stat"><div class="k">核心冲突</div><div class="v" style="font-size:12px;font-weight:600;line-height:1.75">${esc(brief.conflict)}</div></div>
+        <div class="stat"><div class="k">转折与兑现</div><div class="v" style="font-size:12px;font-weight:600;line-height:1.75">${esc(brief.turn)}</div></div>
+        <div class="stat"><div class="k">关键台词</div><div class="v" style="font-size:12px;font-weight:600;line-height:1.75">“${esc(brief.keyLine||'—')}”</div></div>
+        <div class="stat"><div class="k">结尾行动</div><div class="v" style="font-size:12px;font-weight:600;line-height:1.75">${esc(brief.cta)}</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>创作依据</h3><span class="hint">${KB_STATE.loaded?'本地知识库已接入':'内置提炼版知识库'}</span></div>
+      <ul class="checklist">
+        ${brief.basis.map(b=>`<li><span class="ck">✓</span><span>${esc(b)}</span></li>`).join('')}
+      </ul>
+      ${excerpt ? `<div class="mt12"><div class="tiny muted" style="font-weight:700;margin-bottom:4px">知识库原文摘录</div>${excerpt}</div>` : ''}
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>建议制作路径</h3><span class="hint">按顺序做，少返工</span></div>
+      <div class="grid-3">
+        <div class="stat"><div class="k">STEP 1 · 定妆</div><div class="v" style="font-size:12px;font-weight:600;line-height:1.7">先按「角色资产」生成定妆图，固定脸型、发型、服装。</div></div>
+        <div class="stat"><div class="k">STEP 2 · 逐镜生成</div><div class="v" style="font-size:12px;font-weight:600;line-height:1.7">每镜单独跑 2-3 条，选动作最自然、手部最稳的一条。</div></div>
+        <div class="stat"><div class="k">STEP 3 · 后期拼接</div><div class="v" style="font-size:12px;font-weight:600;line-height:1.7">按时间轴剪，叠字效、音效、门头、LOGO、尾板。</div></div>
+      </div>
+    </div>
+  `;
+  $('#panel-brief').innerHTML = html;
+}
+
+function renderScript(){
+  const {ctx, brief, shots, lineInfo} = STATE.project;
+  let rows = '';
+  let lastAct = 0;
+  shots.forEach((s,i)=>{
+    if(s.act!==lastAct){
+      rows += `<tr class="act-divider"><td colspan="5">${esc(s.actName)} · ${actRange(shots,s.act)}</td></tr>`;
+      lastAct = s.act;
+    }
+    rows += `<tr>
+      <td class="time">${fmtTime(s.start)}–${fmtTime(s.end)}s</td>
+      <td class="line">${s.line?`<span class="pill gray" style="margin-right:5px">${esc(s.lineLabel)}</span>${esc(s.line)}`:'<span class="silent">— 留白 —</span>'}</td>
+      <td class="visual">${esc(truncate(s.actionCN,58))}</td>
+      <td class="visual" style="font-size:10.5px">${esc(truncate(s.sound,42))}</td>
+      <td class="visual" style="font-size:10.5px">${esc(s.fx)}</td>
+    </tr>`;
+  });
+  const over = lineInfo.total > lineInfo.budget;
+  const noteClass = over ? 'warn' : 'ok';
+  const noteText = over
+    ? `当前口播约 ${lineInfo.total} 字，超出 ${ctx.duration} 秒舒适区（约 ${lineInfo.budget} 字）。建议删减中间解释句，保留钩子和结尾。`
+    : `当前口播约 ${lineInfo.total} 字，按 3.1 字/秒约 ${brief.readTime} 秒，适合 ${ctx.duration} 秒视频。`;
+  const html = `
+    <div class="card">
+      <div class="card-title">
+        <h3><span class="dot"></span>口播脚本</h3>
+        <button class="btn sm" data-copy-script="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>复制口播</button>
+      </div>
+      <table class="script-table">
+        <thead><tr><th style="width:92px">时间</th><th style="width:38%">台词 / 旁白</th><th>画面</th><th style="width:20%">音效</th><th style="width:64px">字效</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="count-note ${noteClass}">${over?'⚠':'✓'} ${noteText}</div>
+      ${brief.lineTrimmed?'<div class="count-note warn">⚠ 为适配时长，部分中间解释句已自动留白，靠画面和音效推进。</div>':''}
+    </div>
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>口播节奏</h3><span class="hint">按 3.1 字/秒估算</span></div>
+      <div class="grid-4">
+        <div class="stat"><div class="k">总字数</div><div class="v">${lineInfo.total}<small> 字</small></div></div>
+        <div class="stat"><div class="k">预计口播</div><div class="v">${brief.readTime}<small> 秒</small></div></div>
+        <div class="stat"><div class="k">镜头数</div><div class="v">${brief.shotCount}<small> 镜</small></div></div>
+        <div class="stat"><div class="k">平均每镜</div><div class="v">${round1(ctx.duration/brief.shotCount)}<small> 秒</small></div></div>
+      </div>
+    </div>
+  `;
+  $('#panel-script').innerHTML = html;
+}
+
+function actRange(shots, act){
+  const list = shots.filter(s=>s.act===act);
+  if(!list.length) return '';
+  return `${fmtTime(list[0].start)}–${fmtTime(list[list.length-1].end)}s`;
+}
+
+function renderShots(){
+  const {ctx, shots} = STATE.project;
+  const cards = shots.map((s,i)=>{
+    const chars = s.chars.map(c=>c.name).join('、') || '无人物';
+    return `
+      <article class="shot" id="shot-${esc(s.id)}">
+        <div class="shot-head">
+          <span class="shot-no">${pad2(i+1)}</span>
+          <span class="shot-time">${fmtTime(s.start)}–${fmtTime(s.end)}s</span>
+          <span class="shot-cam">${esc(s.cameraCN)}</span>
+          <span class="spacer"></span>
+          <span class="shot-act">${esc(s.actName)}</span>
+          <span class="pill gray">${esc(chars)}</span>
+        </div>
+        <div class="shot-body">
+          <div class="shot-meta">
+            <div class="shot-block"><div class="lbl">画面</div><p>${esc(s.actionCN)}</p></div>
+            <div class="shot-block"><div class="lbl">台词 / 旁白</div><p class="${s.line?'line-text':'dim'}">${s.line?`<span class="pill cyan" style="margin-right:5px">${esc(s.lineLabel)}</span>${esc(s.line)}`:'— 此镜留白，靠画面和音效推进 —'}</p></div>
+          </div>
+          <div class="mini-grid">
+            <div class="mini"><div class="k">音效 / BGM</div><div class="v">${esc(s.sound)}</div></div>
+            <div class="mini"><div class="k">字效</div><div class="v">${esc(s.fx)}</div></div>
+          </div>
+          ${s.post?`<div class="post-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v5m0 3h.01"/><circle cx="12" cy="12" r="9"/></svg><span><b>后期叠加：</b>${esc(s.post)}。不要让 AI 生成可读文字。</span></div>`:''}
+          <div class="prompt-wrap">
+            <div class="prompt-top">
+              <span class="pt">AI PROMPT</span>
+              <span class="spacer"></span>
+              <button class="prompt-tab active" data-prompt-lang="zh">中文</button>
+              <button class="prompt-tab" data-prompt-lang="en">English</button>
+              <button class="btn sm" data-copy-shot="${esc(s.id)}" data-lang="zh">复制中文</button>
+              <button class="btn sm" data-copy-shot="${esc(s.id)}" data-lang="en">复制英文</button>
+            </div>
+            <div class="prompt-box zh" data-lang-box="zh">${esc(s.promptCN)}</div>
+            <div class="prompt-box hidden" data-lang-box="en">${esc(s.promptEN)}</div>
+            <div class="neg"><b>负向约束：</b>${esc(s.negative)}</div>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+  const html = `
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>豆包一键整包</h3><span class="hint">全部分镜打包 · 直接粘贴</span></div>
+      <p class="muted" style="font-size:11.5px;line-height:1.7;margin:0 0 11px">「豆包整包」含全片设定、角色资产、每镜中文提示词、台词、音效、后期；「纯 Prompt」只保留每镜提示词，适合批量粘贴到豆包或其它视频工具。</p>
+      <div class="flex flex-wrap">
+        <button class="btn dark" data-copy-doubao="1">复制豆包整包</button>
+        <button class="btn" data-copy-pure="1">复制纯 Prompt</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>制作顺序</h3><span class="hint">${ctx.style.name} · ${ctx.platform.ratio} · 4K</span></div>
+      <div class="grid-3">
+        <div class="stat"><div class="k">1 · 先生成定妆图</div><div class="v" style="font-size:11.5px;font-weight:600;line-height:1.7">每个角色先出一张正面+侧面定妆照，固定形象。</div></div>
+        <div class="stat"><div class="k">2 · 再逐镜图生视频</div><div class="v" style="font-size:11.5px;font-weight:600;line-height:1.7">每镜单独生成，带 @图 引用；每镜跑 2-3 条选最佳。</div></div>
+        <div class="stat"><div class="k">3 · 最后后期拼接</div><div class="v" style="font-size:11.5px;font-weight:600;line-height:1.7">按时间轴剪，叠字效、音效、门头、LOGO、尾板。</div></div>
+      </div>
+    </div>
+    ${cards}
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>通用负向约束</h3><span class="hint">每镜默认附带</span></div>
+      <div class="prompt-box" style="max-height:none;background:#FCF8EE;border:1px solid #F1E4C2;border-radius:9px;color:#7A5A17">${esc(BASE_NEG)}</div>
+      <div class="alert warn" style="margin-bottom:0"><span>⚠</span><div><b>品牌文字一律后期：</b>门头、工服、手机屏幕、尾板 LOGO 都不要让 AI 生成。AI 只负责画面，文字用剪辑软件或设计工具叠加。</div></div>
+    </div>
+  `;
+  $('#panel-shots').innerHTML = html;
+}
+/* ============================================================
+   界面层 B：角色资产 / 发布包 / 合规 / 知识库 / 交互
+   ============================================================ */
+
+function renderAssets(){
+  const {ctx} = STATE.project;
+  const {assets} = STATE.extras;
+  const cards = assets.map(a=>`
+    <div class="asset">
+      <div class="asset-head">
+        <div class="avatar">${esc(a.initials)}</div>
+        <div><b>${esc(a.name)}</b><span class="role">${esc(a.role)}</span></div>
+        <span class="spacer" style="flex:1"></span>
+        <span class="pill violet">逐镜复用</span>
+      </div>
+      <p>${esc(a.cn)}</p>
+      <div class="en">${esc(a.en)}</div>
+      <div class="asset-actions">
+        <button class="btn sm" data-copy-text="${esc(a.promptCN)}">复制中文定妆 Prompt</button>
+        <button class="btn sm" data-copy-text="${esc(a.promptEN)}">复制 English Sheet</button>
+        <button class="btn sm" data-copy-text="${esc(a.en)}">复制英文资产</button>
+      </div>
+    </div>
+  `).join('');
+  const html = `
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>角色资产</h3><span class="hint">${ctx.style.name} · 逐镜复用，禁止改写</span></div>
+      <div class="alert info" style="margin-top:0"><span>ℹ</span><div><b>先定妆，再生成视频。</b>每个角色先出一张正面 + 45度侧面定妆照，固定脸型、发型、服装；后续镜头用 <code>@图1</code> / <code>@图2</code> 引用。否则 AI 每一镜都可能换一张脸。</div></div>
+      ${cards || '<div class="alert warn">本条脚本以原理/空镜为主，没有固定人物资产。</div>'}
+    </div>
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>一致性执行清单</h3><span class="hint">拍完逐条打勾</span></div>
+      <ul class="checklist">
+        <li><span class="ck">1</span><span>每个角色先生成定妆图，正面 + 45度侧面，纯灰背景，无文字。</span></li>
+        <li><span class="ck">2</span><span>后续镜头用 <code>@图1</code> / <code>@图2</code> 引用，不要重新描述成另一个人。</span></li>
+        <li><span class="ck">3</span><span>同一场景的布局、道具、光线方向保持一致；改造前后用相同机位做 match cut。</span></li>
+        <li><span class="ck">4</span><span>门头、工服、手机屏幕、尾板 LOGO 全部后期叠加，AI 不生成。</span></li>
+        <li><span class="ck">5</span><span>4K、9:16 竖屏统一输出；每镜生成 2-3 条，选手部最稳、表情最克制的一条。</span></li>
+      </ul>
+      ${ctx.styleId==='anim3d'?'<div class="alert warn" style="margin-bottom:0"><span>⚠</span><div><b>版权提醒：</b>本工具使用「3D 动画电影风（原创）」，不要在标题、封面、提示词里写受版权保护的动画IP等 IP 名，也不复刻具体角色形象。</div></div>':''}
+    </div>
+  `;
+  $('#panel-assets').innerHTML = html;
+}
+
+function renderPublish(){
+  const {ctx, brief} = STATE.project;
+  const {publish} = STATE.extras;
+  const titles = publish.titles.map((t,i)=>`
+    <div class="title-item">
+      <span class="idx">${pad2(i+1)}</span>
+      <span class="txt">${esc(t.text)}</span>
+      <span class="len">${t.len}字</span>
+      <button class="copy-mini" data-copy-text="${esc(t.text)}" title="复制标题"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+    </div>
+  `).join('');
+  const html = `
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>标题（6 选 1）</h3><span class="hint">15-40字 · 有提问 · 有口语词</span></div>
+      ${titles}
+      <div class="count-note ok">✓ 标题已按知识库「必须有提问 + 口语词 + 具体场景」规则生成；发布前可按当周热点微调。</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>封面</h3><button class="btn sm" data-copy-text="${esc(publish.cover.main+' / '+publish.cover.sub)}">复制封面文案</button></div>
+      <div class="cover-preview">
+        <div class="tagx">${esc(publish.cover.tag)}</div>
+        <div class="big">${esc(publish.cover.main)}<br>${esc(publish.cover.sub)}</div>
+        <div class="small">封面文字后期排版，不要让 AI 生成中文</div>
+      </div>
+      <div class="grid-3 mt12">
+        <div class="stat"><div class="k">主标题</div><div class="v">${esc(publish.cover.main)}</div></div>
+        <div class="stat"><div class="k">副标题</div><div class="v">${esc(publish.cover.sub)}</div></div>
+        <div class="stat"><div class="k">角标</div><div class="v" style="font-size:11.5px">${esc(publish.cover.tag)}</div></div>
+      </div>
+      <div class="count-note warn">⚠ ${esc(publish.cover.note)}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>话题与发布</h3><span class="hint">${esc(ctx.platform.name)}</span></div>
+      <div class="hashtags">${publish.hashtags.map(h=>`<span class="hashtag">${esc(h)}</span>`).join('')}</div>
+      <div class="grid-2 mt12">
+        <div class="stat"><div class="k">建议发布时间</div><div class="v" style="font-size:11.5px;font-weight:600;line-height:1.7">${esc(publish.time)}</div></div>
+        <div class="stat"><div class="k">评论区引导</div><div class="v" style="font-size:11.5px;font-weight:600;line-height:1.7">${esc(publish.commentCTA)}</div></div>
+      </div>
+      <div class="alert info" style="margin-bottom:0"><span>ℹ</span><div><b>固定话题：</b>${esc(publish.fixedTags)}。视频结尾统一添加，避免漏标签。</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>发布与制作提醒</h3></div>
+      <ul class="checklist">
+        ${publish.postNotes.map(n=>`<li><span class="ck">✓</span><span>${esc(n)}</span></li>`).join('')}
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>尾板</h3><span class="hint">后期叠加，不进 AI 生成</span></div>
+      <div class="excerpt" style="font-size:12.5px"><b>固定文案</b>${esc(TAIL_LINE)}</div>
+      <div class="grid-3 mt12">
+        <div class="stat"><div class="k">LOGO</div><div class="v" style="font-size:11.5px;font-weight:600">示例品牌 LOGO 后期叠加</div></div>
+        <div class="stat"><div class="k">门店信息</div><div class="v" style="font-size:11.5px;font-weight:600">地址/联系方式如需展示，后期叠加（可选）</div></div>
+        <div class="stat"><div class="k">时长</div><div class="v" style="font-size:11.5px;font-weight:600">尾板 2.5 秒，画外音 2 秒</div></div>
+      </div>
+    </div>
+  `;
+  $('#panel-publish').innerHTML = html;
+}
+
+function renderCheck(){
+  const {compliance} = STATE.extras;
+  const order = {err:0,warn:1,ok:2};
+  const items = [...compliance.items].sort((a,b)=>order[a.level]-order[b.level]);
+  const rows = items.map(i=>`
+    <div class="check-row">
+      <div class="check-ico ${i.level}">${i.level==='ok'?'✓':i.level==='warn'?'!':'×'}</div>
+      <div class="check-body"><b>${esc(i.title)}</b><p>${esc(i.detail)}</p></div>
+    </div>
+  `).join('');
+  const verdict = compliance.score>=92 ? '可以进入制作' : compliance.score>=80 ? '建议先处理提醒' : '先修正红线再发布';
+  const html = `
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>合规体检</h3><button class="btn sm" data-copy-check="1">复制报告</button></div>
+      <div class="score-card">
+        <div class="score-ring" style="--score:${compliance.score}"><span>${compliance.score}</span></div>
+        <div class="score-copy"><b>${verdict}</b><p>${compliance.errors} 个错误 · ${compliance.warnings} 个提醒 · ${compliance.passes} 项通过。评分基于语言规范、数据铁律、效果承诺、Prompt 负向约束、人物一致性、平台与版权检查。</p></div>
+      </div>
+      ${rows}
+    </div>
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>发布前最后 5 件事</h3></div>
+      <ul class="checklist">
+        <li><span class="ck">1</span><span>门头、工服、手机屏幕、尾板 LOGO 全部后期叠加，AI 画面里没有可读文字。</span></li>
+        <li><span class="ck">2</span><span>所有数字来自官方口径；示例回本周期按总部最新政策复核。</span></li>
+        <li><span class="ck">3</span><span>全文没有合作类禁用词。</span></li>
+        <li><span class="ck">4</span><span>结尾有 #示例品牌#电脑维修，有评论区引导。</span></li>
+        <li><span class="ck">5</span><span>3D动画风格没有使用受版权保护的IP名。</span></li>
+      </ul>
+    </div>
+  `;
+  $('#panel-check').innerHTML = html;
+}
+
+/* ---------- 知识库 ---------- */
+function escapeRegExp(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function extractExcerpt(text, benefit){
+  let clean = String(text||'')
+    .replace(/^---[\s\S]*?---/,'')
+    .replace(/```[\s\S]*?```/g,' ')
+    .replace(/\[\[([^\]]+)\]\]/g,'$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g,'$1')
+    .replace(/[#>*`|]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+  const keys = [`利益点${benefit.no}`, benefit.name, benefit.short];
+  let idx = -1;
+  for(const k of keys){ idx = clean.indexOf(k); if(idx>=0) break; }
+  if(idx<0) return '';
+  let seg = clean.slice(Math.max(0,idx-60), idx+340);
+  return truncate(seg, 300);
+}
+function updateKbStatus(){
+  const dot = $('#kbDot'), text = $('#kbStatusText');
+  if(KB_STATE.loaded){
+    dot.classList.add('on');
+    text.textContent = `本地知识库 · ${KB_STATE.files.length} 文件 / ${(KB_STATE.chars/10000).toFixed(1)} 万字`;
+  }else{
+    dot.classList.remove('on');
+    text.textContent = '内置知识库 · 建议导入本地';
+  }
+}
+function renderKB(){
+  const builtin = [
+    ['AI视频Prompt方法论总览','示例方法论/00-AI视频Prompt方法论总览.md'],
+    ['AI视频Prompt模板','示例方法论/02-AI视频Prompt模板.md'],
+    ['示例门店经营脚本·分镜Prompt','知识库/示例分镜脚本.md'],
+    ['示例门店经营脚本·分镜结构','知识库/示例分镜表.md'],
+    ['门店经营核心利益点索引','示例业务/01_门店经营核心利益点/00-门店经营核心利益点索引.md'],
+    ['渠道短视频口播脚本模板','知识库/口播脚本方法论/渠道短视频口播脚本标准模板.md'],
+    ['ai-video-prompt Skill','示例方法论文档/SKILL.md'],
+    ['人物资产库','示例方法论文档/references/人物资产库.md'],
+    ['脚本结构模板','示例方法论文档/references/脚本结构模板.md']
+  ];
+  if(!KB_STATE.loaded){
+    $('#panel-kb').innerHTML = `
+      <div class="card">
+        <div class="card-title"><h3><span class="dot"></span>接入本地知识库</h3><span class="pill amber">未导入</span></div>
+        <div class="dropzone" id="kbDrop">
+          <b>点击选择「本地知识库」文件夹</b>
+          <span>或把 .md / .txt / .json 文件拖进来<br>建议路径：你的本地目录\\本地目录\\workspace\\本地知识库</span>
+        </div>
+        <div class="alert info"><span>ℹ</span><div><b>导入后会发生什么：</b>工具只在本地读取 Markdown，提取 8 大利益点的原文依据、官方数据口径和旧数据冲突；不会上传，也不会写入原文件夹。不导入也能用内置提炼版。</div></div>
+        <div class="alert warn"><span>⚠</span><div><b>只读相关目录：</b>知识库 / 示例业务 / 示例方法论 / 技能库 / ai-video-prompt。自动跳过 MEMORY.md、账号、日记、生活决策等敏感文件。</div></div>
+        <div class="grid-3">
+          <div class="stat"><div class="k">已内置</div><div class="v">5 类脚本模型<br><small>困境 / 错位 / 对比 / 科普 / 口播</small></div></div>
+          <div class="stat"><div class="k">已内置</div><div class="v">8 大利益点<br><small>品牌 / 获客 / 供应链 / 技术 / 服务 / 人才 / 大会 / 形象</small></div></div>
+          <div class="stat"><div class="k">已内置</div><div class="v">数据与语言铁律<br><small>多城市 · 多门店（示例）</small></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><h3><span class="dot"></span>内置知识来源</h3><span class="hint">可直接使用，导入后更完整</span></div>
+        <ul class="source-list">
+          ${builtin.map(([n,p])=>`<li><span class="fi">MD</span><span><b>${esc(n)}</b><br><span class="muted">${esc(p)}</span></span></li>`).join('')}
+        </ul>
+      </div>
+    `;
+    bindKbDrop();
+    return;
+  }
+  const topFiles = [...KB_STATE.files].sort((a,b)=>b.chars-a.chars).slice(0,18);
+  const coverage = BENEFITS.map(b=>`<div class="stat"><div class="k">${esc(b.no)} ${esc(b.name)}</div><div class="v">${KB_STATE.benefitHits[b.id]||0}<small> 处命中</small></div></div>`).join('');
+  const excerpts = BENEFITS.map(b=>{
+    const list = KB_STATE.excerpts[b.id]||[];
+    if(!list.length) return '';
+    return `<div class="excerpt"><b>${esc(b.name)} · ${esc(list[0].file)}</b>${esc(list[0].text)}</div>`;
+  }).join('');
+  $('#panel-kb').innerHTML = `
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>本地知识库已接入</h3><span class="pill green">本地读取 · 不上传</span></div>
+      <div class="kb-stats">
+        <div class="kb-stat"><div class="k">文件</div><div class="v">${KB_STATE.files.length}<small> 个</small></div></div>
+        <div class="kb-stat"><div class="k">文本量</div><div class="v">${(KB_STATE.chars/10000).toFixed(1)}<small> 万字</small></div></div>
+        <div class="kb-stat"><div class="k">利益点命中</div><div class="v">${Object.values(KB_STATE.benefitHits).filter(n=>n>0).length}<small> / 8</small></div></div>
+        <div class="kb-stat"><div class="k">旧数据冲突</div><div class="v">${KB_STATE.conflicts.length}<small> 处</small></div></div>
+      </div>
+      <div class="dropzone" id="kbDrop" style="padding:14px"><b>重新选择知识库文件夹</b><span>支持 .md / .txt / .json；跳过 .obsidian、node_modules、备份目录</span></div>
+      ${KB_STATE.conflicts.length?`<div class="alert err"><span>⚠</span><div><b>发现旧数据：</b>${esc(uniq(KB_STATE.conflicts).join('、'))}。工具已按2026-09-18数据铁律屏蔽，生成时统一使用「多城市 · 多门店（示例）」口径。</div></div>`:''}
+    </div>
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>8 大利益点覆盖</h3><span class="hint">命中次数</span></div>
+      <div class="grid-4">${coverage}</div>
+      ${excerpts||'<div class="alert warn">没有提取到利益点原文，可能是文件夹选错或文件编码不支持。建议重新选择「本地知识库」根目录。</div>'}
+    </div>
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>已读取文件</h3><span class="hint">按文本量排序 · 前18个</span></div>
+      <ul class="source-list">
+        ${topFiles.map(f=>`<li><span class="fi">MD</span><span><b>${esc(f.name)}</b><br><span class="muted">${esc(f.path)} · ${(f.chars/1000).toFixed(1)}k字</span></span></li>`).join('')}
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>数据点抽样</h3><span class="hint">发布前仍需按总部最新口径复核</span></div>
+      <ul class="source-list">
+        ${KB_STATE.dataPoints.slice(0,12).map(d=>`<li><span class="fi">#</span><span><b>${esc(d.value)}</b> · ${esc(d.context)}</span></li>`).join('')||'<li><span class="muted">未提取到数据点</span></li>'}
+      </ul>
+    </div>
+  `;
+  bindKbDrop();
+}
+function bindKbDrop(){
+  const drop = $('#kbDrop');
+  if(!drop) return;
+  drop.onclick = ()=>$('#kbInput').click();
+  drop.ondragover = e=>{ e.preventDefault(); drop.classList.add('drag'); };
+  drop.ondragleave = ()=>drop.classList.remove('drag');
+  drop.ondrop = e=>{ e.preventDefault(); drop.classList.remove('drag'); loadKnowledgeFiles(e.dataTransfer.files); };
+}
+async function loadKnowledgeFiles(fileList){
+  const files = Array.from(fileList||[]).filter(f=>/\.(md|txt|json)$/i.test(f.name));
+  if(!files.length){ toast('没有找到 .md / .txt / .json 文件'); return; }
+  toast(`正在读取 ${files.length} 个文件…`);
+  const entries = [];
+  for(const f of files){
+    const path = f.webkitRelativePath || f.name;
+    if(/(\.obsidian|node_modules|\.git|__pycache__|skills_backup)/i.test(path)) continue;
+    if(/(^|\/)(MEMORY\.md|openclaw\.json|accounts\.json|\.env)/i.test(path)) continue;
+    const relevant = /知识库|示例业务|示例方法论|技能库|ai-video-prompt|人物资产库|脚本结构模板/.test(path);
+    if(!relevant) continue;
+    if(f.size > 400000) continue;
+    try{
+      const text = await f.text();
+      entries.push({name:f.name,path,text,chars:text.length});
+    }catch(e){ console.warn('read failed',path,e); }
+  }
+  if(!entries.length){ toast('没有可读取的文本文件'); return; }
+  KB_STATE.files = entries.map(e=>({name:e.name,path:e.path,chars:e.chars}));
+  KB_STATE.chars = entries.reduce((a,e)=>a+e.chars,0);
+  KB_STATE.dirs = uniq(entries.map(e=>e.path.split('/')[0]).filter(Boolean)).slice(0,12);
+  KB_STATE.benefitHits = {};
+  KB_STATE.excerpts = {};
+  KB_STATE.dataPoints = [];
+  KB_STATE.conflicts = [];
+  BENEFITS.forEach(b=>{
+    const hits = [];
+    entries.forEach(e=>{
+      const re = new RegExp(`利益点[一二三四五六七八0-9]*[：:]?\\s*${escapeRegExp(b.name)}|${escapeRegExp(b.name)}`);
+      if(re.test(e.text)){
+        const ex = extractExcerpt(e.text,b);
+        if(ex) hits.push({file:e.path,text:ex});
+      }
+    });
+    KB_STATE.benefitHits[b.id] = hits.length;
+    KB_STATE.excerpts[b.id] = hits.slice(0,2);
+  });
+  entries.forEach(e=>{
+    const dpRe = /(\d{2,4}\+?)\s*(省|个?城市|家门店|位合作伙伴|个月)/g;
+    let m;
+    while((m=dpRe.exec(e.text))!==null){
+      const context = e.text.slice(Math.max(0,m.index-30), m.index+m[0].length+30).replace(/\s+/g,' ');
+      KB_STATE.dataPoints.push({value:m[0],file:e.path,context});
+    }
+  });
+  entries.forEach(e=>{
+    ['旧口径A','旧口径B','旧口径C'].forEach(k=>{
+      if(e.text.includes(k) && !KB_STATE.conflicts.includes(k)) KB_STATE.conflicts.push(k);
+    });
+  });
+  KB_STATE.dataPoints.sort((a,b)=>{
+    const score = x => /多省|200\+|1000|600\+/.test(x.value) ? 0 : 1;
+    return score(a)-score(b);
+  });
+  KB_STATE.loaded = true;
+  KB_STATE.loadedAt = new Date().toISOString();
+  updateKbStatus();
+  renderKB();
+  if(STATE.project){
+    STATE.extras.compliance = runCompliance(STATE.project, STATE.extras);
+    renderCheck();
+    renderBrief();
+    renderHeader();
+  }
+  toast(`已接入 ${entries.length} 个文件 / ${(KB_STATE.chars/10000).toFixed(1)} 万字`);
+}
+
+/* ---------- Tabs ---------- */
+function setTab(id){
+  STATE.activeTab = id;
+  $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
+  $$('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+id));
+  if(id==='kb') renderKB();
+}
+
+/* ---------- 复制 / 下载 ---------- */
+async function copyText(text){
+  if(!text) return;
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('已复制');
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); toast('已复制'); }
+    catch(err){ toast('复制失败，请手动选择'); }
+    ta.remove();
+  }
+}
+function safeName(s){
+  return String(s||'品牌视频').replace(/[\\/:*?"<>|]/g,'_').replace(/\s+/g,'_').slice(0,40);
+}
+function download(filename, content, type){
+  const blob = new Blob([content], {type:type||'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1200);
+}
+function toast(msg){
+  const el = $('#toast');
+  $('#toastText').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+/* ---------- 项目保存 ---------- */
+function loadProjects(){
+  try{ return JSON.parse(localStorage.getItem(PROJECTS_KEY)||'[]'); }catch(e){ return []; }
+}
+function saveProjects(list){
+  try{ localStorage.setItem(PROJECTS_KEY, JSON.stringify(list.slice(0,30))); }catch(e){ toast('本机存储空间不足'); }
+}
+function saveProject(){
+  if(!STATE.project){ toast('先生成再保存'); return; }
+  const name = prompt('给这个项目起个名字', STATE.project.brief.title);
+  if(!name) return;
+  const list = loadProjects();
+  list.unshift({
+    id: Date.now().toString(36),
+    name: String(name).slice(0,60),
+    createdAt: new Date().toISOString(),
+    input: STATE.lastInput,
+    meta: {
+      duration: STATE.project.ctx.duration,
+      platform: STATE.project.ctx.platform.name,
+      shots: STATE.project.brief.shotCount,
+      score: STATE.extras.compliance.score
+    }
+  });
+  saveProjects(list);
+  renderProjectList();
+  toast('已保存到本机');
+}
+function renderProjectList(){
+  const list = loadProjects();
+  const box = $('#projectList');
+  if(!list.length){
+    box.innerHTML = '<div class="alert info" style="margin:0"><span>ℹ</span><div>还没有保存的项目。生成后点「保存项目」，下次可以一键恢复输入。</div></div>';
+    return;
+  }
+  box.innerHTML = list.map(p=>`
+    <div class="project-row">
+      <div class="info">
+        <b>${esc(p.name)}</b>
+        <span>${new Date(p.createdAt).toLocaleString('zh-CN',{hour12:false})} · ${p.meta?.duration||'—'}秒 · ${p.meta?.shots||'—'}镜 · 合规${p.meta?.score??'—'}分</span>
+      </div>
+      <button class="btn sm" data-project-load="${esc(p.id)}">打开</button>
+      <button class="btn sm" data-project-del="${esc(p.id)}">删除</button>
+    </div>
+  `).join('');
+}
+function loadProject(id){
+  const p = loadProjects().find(x=>x.id===id);
+  if(!p) return;
+  fillInputs(p.input);
+  closeModal('projectsModal');
+  toast('已恢复输入，正在生成…');
+  setTimeout(generate, 120);
+}
+function deleteProject(id){
+  if(!confirm('删除这个保存的项目？')) return;
+  saveProjects(loadProjects().filter(x=>x.id!==id));
+  renderProjectList();
+  toast('已删除');
+}
+
+/* ---------- 草稿 ---------- */
+function saveDraft(){
+  try{
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({input:readInputs(), savedAt:new Date().toISOString()}));
+  }catch(e){}
+}
+let draftTimer = null;
+function scheduleDraft(){
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveDraft, 700);
+}
+function restoreDraft(){
+  try{
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');
+    if(d && d.input) fillInputs(d.input);
+  }catch(e){}
+}
+
+/* ---------- 弹窗 ---------- */
+function openModal(id){ $('#'+id).classList.add('show'); }
+function closeModal(id){ $('#'+id).classList.remove('show'); }
+
+/* ---------- 事件绑定 ---------- */
+function bindEvents(){
+  $('#generateBtn').addEventListener('click', generate);
+  $('#idea').addEventListener('input', ()=>{ updateIdeaCount(); scheduleDraft(); });
+  $$('#fAudience,#fArchetype,#fStyle,#fDuration,#fPlatform,#fHero,#fRef').forEach(el=>{
+    el.addEventListener('change', scheduleDraft);
+  });
+  $('#fCity').addEventListener('input', scheduleDraft);
+  $('#fShop').addEventListener('input', scheduleDraft);
+  $('#demoBtn').addEventListener('click', ()=>{
+    $('#idea').value = EXAMPLES[0];
+    updateIdeaCount();
+    generate();
+  });
+  $('#exampleChips').addEventListener('click', e=>{
+    const b = e.target.closest('[data-example]');
+    if(!b) return;
+    $('#idea').value = EXAMPLES[parseInt(b.dataset.example,10)] || '';
+    updateIdeaCount();
+    $('#idea').focus();
+    toast('示例已填入，点「生成」');
+  });
+  $('#tabs').addEventListener('click', e=>{
+    const t = e.target.closest('.tab');
+    if(t) setTab(t.dataset.tab);
+  });
+  document.addEventListener('click', e=>{
+    const promptTab = e.target.closest('.prompt-tab');
+    if(promptTab){
+      const wrap = promptTab.closest('.prompt-wrap');
+      const lang = promptTab.dataset.promptLang;
+      wrap.querySelectorAll('.prompt-tab').forEach(x=>x.classList.toggle('active', x===promptTab));
+      wrap.querySelectorAll('[data-lang-box]').forEach(b=>b.classList.toggle('hidden', b.dataset.langBox!==lang));
+      return;
+    }
+    const shotCopy = e.target.closest('[data-copy-shot]');
+    if(shotCopy){
+      const s = STATE.project.shots.find(x=>x.id===shotCopy.dataset.copyShot);
+      if(s) copyText(shotCopy.dataset.lang==='en'?s.promptEN:s.promptCN);
+      return;
+    }
+    const copyDoubao = e.target.closest('[data-copy-doubao]');
+    if(copyDoubao){ if(STATE.project) copyText(buildDoubaoPackage(STATE.project, STATE.extras, false)); return; }
+    const copyPure = e.target.closest('[data-copy-pure]');
+    if(copyPure){ if(STATE.project) copyText(buildDoubaoPackage(STATE.project, STATE.extras, true)); return; }
+    const copyEl = e.target.closest('[data-copy-text]');
+    if(copyEl){ copyText(copyEl.dataset.copyText); return; }
+    const copyScript = e.target.closest('[data-copy-script]');
+    if(copyScript){
+      const text = STATE.project.shots.filter(s=>s.line).map(s=>s.line).join('\n');
+      copyText(text); return;
+    }
+    const copyCheck = e.target.closest('[data-copy-check]');
+    if(copyCheck){
+      const c = STATE.extras.compliance;
+      const text = `合规体检 ${c.score}/100\n` + c.items.map(i=>`${i.level==='ok'?'✅':i.level==='warn'?'⚠️':'❌'} ${i.title}：${i.detail}`).join('\n');
+      copyText(text); return;
+    }
+    const close = e.target.closest('[data-close-modal]');
+    if(close){ closeModal(close.dataset.closeModal); return; }
+    const load = e.target.closest('[data-project-load]');
+    if(load){ loadProject(load.dataset.projectLoad); return; }
+    const del = e.target.closest('[data-project-del]');
+    if(del){ deleteProject(del.dataset.projectDel); return; }
+  });
+  $('#copyAllBtn').addEventListener('click', ()=>{
+    if(!STATE.project) return;
+    copyText(buildMarkdown(STATE.project, STATE.extras));
+  });
+  $('#copyDoubaoBtn').addEventListener('click', ()=>{
+    if(!STATE.project) return;
+    copyText(buildDoubaoPackage(STATE.project, STATE.extras, false));
+  });
+  $('#copyPurePromptBtn').addEventListener('click', ()=>{
+    if(!STATE.project) return;
+    copyText(buildDoubaoPackage(STATE.project, STATE.extras, true));
+  });
+  $('#downloadMdBtn').addEventListener('click', ()=>{
+    if(!STATE.project) return;
+    const md = buildMarkdown(STATE.project, STATE.extras);
+    download(`${safeName(STATE.project.brief.title)}_${new Date().toISOString().slice(0,10)}.md`, md, 'text/markdown;charset=utf-8');
+    toast('Markdown 已下载');
+  });
+  $('#downloadJsonBtn').addEventListener('click', ()=>{
+    if(!STATE.project) return;
+    const json = buildJSON(STATE.project, STATE.extras);
+    download(`${safeName(STATE.project.brief.title)}_${new Date().toISOString().slice(0,10)}.json`, json, 'application/json;charset=utf-8');
+    toast('JSON 已下载');
+  });
+  $('#saveProjectBtn').addEventListener('click', saveProject);
+  $('#variantBtn').addEventListener('click', ()=>{
+    if(!$('#idea').value.trim()){ toast('先写一句你想拍什么'); return; }
+    const cur = readInputs();
+    if(cur.idea !== LAST_IDEA){ VARIANT = 0; LAST_IDEA = cur.idea; }
+    VARIANT++;
+    generate();
+    toast('已换一版');
+  });
+  $('#printBtn').addEventListener('click', ()=>window.print());
+  $('#projectsBtn').addEventListener('click', ()=>{ renderProjectList(); openModal('projectsModal'); });
+  $('#helpBtn').addEventListener('click', ()=>openModal('helpModal'));
+  $('#importKbBtn').addEventListener('click', ()=>$('#kbInput').click());
+  $('#kbStatusBtn').addEventListener('click', ()=>{ if(!STATE.project){ $('#kbInput').click(); toast('请选择「本地知识库」文件夹'); return; } setTab('kb'); $('#result').classList.add('show'); $('#emptyState').classList.add('hidden'); window.scrollTo({top:0,behavior:'smooth'}); });
+  $('#kbInput').addEventListener('change', e=>{ loadKnowledgeFiles(e.target.files); e.target.value=''; });
+  $('#kbFileInput').addEventListener('change', e=>{ loadKnowledgeFiles(e.target.files); e.target.value=''; });
+  document.addEventListener('keydown', e=>{
+    if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); generate(); }
+    if(e.key==='Escape'){ closeModal('projectsModal'); closeModal('helpModal'); }
+  });
+  $$('.modal-back').forEach(m=>m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('show'); }));
+}
+
+/* ---------- 初始化 ---------- */
+function init(){
+  bindEvents();
+  restoreDraft();
+  updateIdeaCount();
+  updateKbStatus();
+  renderKB();
+  renderProjectList();
+  if(location.hash.startsWith('#demo')){
+    const requested = location.hash.split('/')[1] || 'brief';
+    const validTabs = ['brief','script','shots','assets','publish','check','kb'];
+    PENDING_TAB = validTabs.includes(requested) ? requested : 'brief';
+    setTimeout(()=>{ $('#idea').value = EXAMPLES[0]; updateIdeaCount(); generate(); }, 250);
+  }
+}
+document.addEventListener('DOMContentLoaded', init);</script>
+</body>
+</html>
