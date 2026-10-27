@@ -1859,15 +1859,15 @@ function resolveSubjects(card, ctx){
 
 function buildNarrationCN(s){
   const label = s.lineLabel || '—';
-  if(!s.line) return '旁白：本镜无台词，只保留环境音和BGM。';
+  if(!s.line) return '旁白：本镜无台词，只保留环境音和BGM。音频：不要生成人声。';
   const mode = label==='画外音' ? '画外旁白，人物不开口' : '由画面中的角色自然说出，口型同步';
-  return `旁白/台词（普通话，${label}）：「${s.line}」。${mode}，语气真实克制，不像广告播音。`;
+  return `旁白/台词（普通话，${label}）：「${s.line}」。${mode}，语气真实克制，不像广告播音。音频：优先生成普通话人声；若模型不支持人声，保留环境音，旁白后期配音。`;
 }
 function buildNarrationEN(s){
   const label = s.lineLabel || '—';
-  if(!s.line) return ' Voiceover: none in this shot; ambient sound and music only.';
+  if(!s.line) return ' Voiceover: none in this shot; ambient sound and music only. Audio: do not generate speech.';
   const mode = label==='画外音' ? 'off-screen narration, characters do not speak' : 'spoken naturally by the on-screen character with lip sync';
-  return ` Mandarin voiceover/dialogue (${label}): "${s.line}". ${mode}; restrained natural delivery, not an announcer.`;
+  return ` Mandarin voiceover/dialogue (${label}): "${s.line}". ${mode}; restrained natural delivery, not an announcer. Audio: generate Mandarin voiceover/dialogue if the model supports audio; otherwise keep ambient sound and add voiceover in post.`;
 }
 function buildShot(card, ctx, timing){
   const chars = resolveSubjects(card, ctx);
