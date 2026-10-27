@@ -122,6 +122,12 @@ textarea#idea::placeholder{color:#A6ADBA}
   padding:6px 10px;font-size:11px;line-height:1;transition:.16s ease;
 }
 .chip:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-soft)}
+.chip.ghost{background:var(--cyan-soft);border-color:#BFE3E4;color:var(--cyan);font-weight:700}
+.example-note{margin:-8px 0 18px;padding:11px 12px;border:1px solid var(--line);border-left:3px solid var(--cyan);background:#fff;border-radius:10px;font-size:11.5px;line-height:1.75;color:var(--muted)}
+.example-note[hidden]{display:none}
+.example-note b{display:block;color:var(--text);font-size:12px;margin-bottom:3px}
+.example-note p{margin:0 0 4px}
+.example-note .tiny{font-size:10px;color:var(--muted-2);margin:0}
 .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field.wide{grid-column:1/-1}
@@ -476,9 +482,15 @@ body.simple-mode .composer{padding-top:20px}
     <div class="examples" id="exampleChips">
       <button class="chip" data-example="0">单店老板 · 没客流</button>
       <button class="chip" data-example="1">同行对比 · 算账</button>
-      <button class="chip" data-example="2">清灰科普 · 专业</button>
+      <button class="chip" data-example="2">电脑维修培训学校就业</button>
+      <button class="chip ghost" data-example-note="2" aria-expanded="false" aria-controls="exampleNote2">展开说明</button>
       <button class="chip" data-example="3">多店老板 · 管不过来</button>
       <button class="chip" data-example="4">CS 口播 · 30秒</button>
+    </div>
+    <div class="example-note" id="exampleNote2" hidden>
+      <b>电脑维修培训学校就业 · 选题说明</b>
+      <p>电脑维修培训学校毕业后，可以自己开一家联想百应门店。视频从「毕业后是继续找工作，还是自己开店」切入，讲清品牌、选址、供应链、技术、获客等开店支持，结尾引导留言「开店」了解方案。</p>
+      <p class="tiny">具体合作政策以品牌方最新文件为准。</p>
     </div>
 
     <div class="hr"></div>
@@ -492,6 +504,7 @@ body.simple-mode .composer{padding-top:20px}
           <option value="master">维修师傅</option>
           <option value="cross">跨界转型</option>
           <option value="multi">多店老板</option>
+          <option value="graduate">培训学校毕业生</option>
         </select>
       </div>
       <div class="field advanced-only">
@@ -501,7 +514,7 @@ body.simple-mode .composer{padding-top:20px}
           <option value="dilemma">困境共鸣</option>
           <option value="mismatch">错位擦肩</option>
           <option value="comparison">同行对比</option>
-          <option value="science">科普解误区</option>
+          <option value="employment">培训就业创业</option>
           <option value="direct">口播直给</option>
         </select>
       </div>
@@ -511,7 +524,6 @@ body.simple-mode .composer{padding-top:20px}
           <option value="real">写实电影感</option>
           <option value="anim3d">3D 动画电影风（原创）</option>
           <option value="docu">纪实手持 UGC</option>
-          <option value="science">三维原理演示</option>
         </select>
       </div>
       <div class="field">
@@ -670,8 +682,8 @@ body.simple-mode .composer{padding-top:20px}
    ai-video-prompt Skill / 8大门店经营利益点 / 数据与语言铁律）
    ============================================================ */
 
-const APP_VERSION = '1.0.0';
-const KB_VERSION = '2026-10-26';
+const APP_VERSION = '1.1.0';
+const KB_VERSION = '2026-10-27';
 
 /* ---------- 角色资产（逐镜复用，禁止改写） ---------- */
 const CHARACTERS = {
@@ -689,6 +701,11 @@ const CHARACTERS = {
     key:'young', name:'小陈', role:'年轻维修师傅', short:'27岁 · 维修师傅', initials:'陈',
     cn:'中国男性，27岁，身高约175cm，偏瘦，圆润友善脸，短黑发，干净无胡须。穿深灰色维修工装外套，内搭黑色T恤，蓝色直筒牛仔裤，白色运动鞋。略显腼腆但认真，说话不急不慢。',
     en:'A Chinese male computer repair technician, 27 years old, about 175cm, lean, round friendly face, short black hair, clean shaven. Wears a dark grey work jacket over a black tee, blue straight jeans, white sneakers. A little shy but earnest, speaks calmly.'
+  },
+  graduate: {
+    key:'graduate', name:'小林', role:'电脑维修培训学校毕业生', short:'23岁 · 毕业生', initials:'林',
+    cn:'中国男性，23岁，身高约176cm，偏瘦，干净短发，略显孩子气的圆脸，暖色肤色，无胡须。穿浅灰色连帽卫衣、深蓝色直筒牛仔裤、白色运动鞋，背黑色双肩包，手里拿着一个空白资料袋（无文字）。神态认真、略显紧张，像刚毕业的年轻人，不油滑、不摆拍。',
+    en:'A Chinese male graduate, 23, about 176cm, lean, short neat black hair, a slightly boyish round face, warm skin tone, clean shaven. Light grey hoodie, dark blue straight jeans, white sneakers, black backpack, carrying a blank document folder with no text. Earnest and slightly nervous, like a recent graduate, never slick or posed.'
   },
   wife: {
     key:'wife', name:'妻子', role:'老板的妻子', short:'33岁 · 温和观察者', initials:'妻',
@@ -753,6 +770,14 @@ const SCENES = {
   street: {
     cn:'中国城市普通社区街道，梧桐树影，电动车和行人偶尔经过，午后阳光，生活化，不拍成商业大片。',
     en:'An ordinary Chinese community street, plane-tree shadows, occasional e-bikes and pedestrians, warm afternoon sun, everyday life, not a commercial blockbuster.'
+  },
+  campus: {
+    cn:'明亮的电脑维修培训学校实操教室，白色墙面、木色长桌、拆开的笔记本电脑、示波器、螺丝刀和练习板，墙上是一块空白公告板（无文字），窗外有自然光；学员是二十多岁的年轻人，穿简洁便装，不豪华、不像广告片场。',
+    en:'A bright computer-repair training school practice room, white walls, long wooden tables, opened laptops, oscilloscopes, screwdrivers and practice boards, a blank noticeboard with no lettering, natural window light. Students are young adults in simple casual clothes. Not luxurious, not an ad set.'
+  },
+  campusNight: {
+    cn:'夜晚的培训学校实操教室，只开着一盏暖色台灯，长桌上放着拆开的笔记本、工具和几张空白资料，窗外是安静的城市夜色，略显孤独但不凄凉。',
+    en:'A training school practice room at night, lit by a single warm desk lamp, an opened laptop, tools and blank handouts on the long table, quiet city night outside the window. A little lonely but not bleak.'
   },
   training: {
     cn:'简洁的培训教室，白色墙面、木色长桌、笔记本和资料，窗外自然光，学员是普通维修店老板和师傅，不像豪华会议。',
@@ -857,7 +882,8 @@ const AUDIENCES = [
   { id:'single', name:'单店老板', short:'一个人守店，什么都自己扛', pain:'缺品牌、缺客户、缺备件、精力有限', keywords:['单店','一个人','守店','夫妻店','小店','自己扛','老板'] },
   { id:'master', name:'维修师傅', short:'技术好，但不懂运营和获客', pain:'技术出身、不会线上、怕开店失败', keywords:['师傅','技术出身','维修工','打工','想开店','技术好','手艺人'] },
   { id:'cross', name:'跨界转型', short:'看到行业变化，想找新出路', pain:'行业变化快、缺经验、怕踩坑', keywords:['跨界','转行','转型','小白','外行','其他行业','新出路'] },
-  { id:'multi', name:'多店老板', short:'手上几家店，管理半径到顶', pain:'扩张瓶颈、人员难管、供应链分散', keywords:['多店','几家店','连锁','扩张','分店','管理','三家店','两家店'] }
+  { id:'multi', name:'多店老板', short:'手上几家店，管理半径到顶', pain:'扩张瓶颈、人员难管、供应链分散', keywords:['多店','几家店','连锁','扩张','分店','管理','三家店','两家店'] },
+  { id:'graduate', name:'培训学校毕业生', short:'学完技术，正在选就业还是开店', pain:'缺经验、缺品牌、缺客源，不敢自己开店', keywords:['培训学校','毕业生','毕业','学员','就业','找工作','刚学完','电脑维修培训','职业学校'] }
 ];
 
 /* ---------- 画面风格 ---------- */
@@ -927,7 +953,7 @@ const MOVES = {
 const EXAMPLES = [
   '我们这边很多单店老板，一个人守店，技术不错但店里没客人。想拍一条真实、走心的视频：他认真拍短视频想引流，结果还是没人看；后来了解示例品牌，线上开始有订单，顾客也找上门。60秒，发抖音，写实电影感。',
   '拍一个同行对比：老王每天关店后算账，配件贵、调货慢、利润薄；隔壁同行加入示例品牌后，手机订单不停，备件当天到。老王看着自己的账本，决定也去了解。45秒，真实一点，不要喊麦。',
-  '做一条电脑清灰科普：客户说电脑又吵又烫，以为要换电脑。其实先别急着换。用三维示意讲清楚风扇积灰、散热变差、降频卡顿，最后告诉他多久清一次、不建议自己拆。90秒，专业、可信。',
+  '给电脑维修培训学校的毕业生做一条招商视频：毕业后除了去店里打工，还可以自己开一家联想百应门店。想拍出刚毕业时的迷茫：投简历、工资不高、想开店又怕没品牌没客源；后来了解到品牌提供选址、供应链、技术、获客支持，决定走开店这条路。60秒，发给准备就业的学员，真实、有希望，不要喊麦。',
   '给多店老板：手上三家店，管不过来，备件各买各的，师傅也不好招。想介绍示例品牌的供应链、培训和线上获客，让他觉得可以继续做大。60秒，视频号。',
   '我是一名CS城市经理，想直接口播介绍示例品牌能给门店的支持：品牌、线上获客、原厂备件、技术团队。30秒，语速快一点，有力量，但不要喊麦。'
 ];
@@ -1352,7 +1378,7 @@ CARDS.push(
     id:'sci_end', act:5, actName:'收尾', subjects:['hero','customerA'], scene:'shop', weight:1.0,
     actionCN:'顾客接过修好的电脑，试了试风扇声音，点头。主角擦擦手，对镜头说一句，克制。',
     actionEN:'The customer receives the repaired laptop, listens to the fan and nods. The protagonist wipes his hands and says one line to the camera, restrained.',
-    line:()=>'不建议自己拆，有清灰需要，来示例品牌服务中心。', lineLabel:'对镜头',
+    line:()=>'不建议自己拆，有需要，来示例品牌服务中心。', lineLabel:'对镜头',
     sound:'开机声、顾客道谢、轻 BGM。',
     mm:50, angle:'eye', move:'static', light:'warmSoft', fx:'DING!', post:'服务信息/尾板后期叠加', negative:'no exaggerated smile, no logo generated in frame', 
   },
@@ -1365,6 +1391,108 @@ CARDS.push(
     mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'结尾字幕后期叠加', negative:'signboard blank, no readable text, no shouting', 
   }
 );
+
+/* ============================================================
+   镜头卡库 C（培训学校就业 → 开店）
+   ============================================================ */
+CARDS.push(
+  {
+    id:'hook_grad_choice', act:1, actName:'钩子', subjects:['graduate'], scene:'campus', weight:1.2,
+    actionCN:'培训学校的实操教室里，刚结课的年轻学员把空白结业资料袋放在桌上，手机里是招聘信息（界面模糊）。他看了一会儿，抬头看向窗外，神情有点迷茫。',
+    actionEN:'In a training school practice room, a young graduate who has just finished class places a blank certificate folder on the table; job listings glow faintly on his phone, the UI blurred. He looks at them for a moment, then out the window, a little uncertain.',
+    line:()=>'电脑维修学完了，接下来只能去打工吗？', lineLabel:'对镜头',
+    sound:'教室安静的环境声、手机轻响。BGM 低而克制的钢琴。',
+    mm:50, angle:'eye', move:'static', light:'morning', fx:'—', post:'手机招聘界面后期叠加', negative:'phone screen out of focus, no readable UI'
+  },
+  {
+    id:'hook_grad_jobs', act:1, actName:'钩子', subjects:['graduate'], scene:'campus', weight:1.05,
+    actionCN:'学员坐在长桌前，面前摊着几张空白简历，用笔划掉一行，靠回椅背，盯着手机上的招聘信息，轻轻叹气。',
+    actionEN:'The graduate sits at the long table with several blank resumes in front of him, crosses out a line with a pen, leans back in the chair and stares at job listings on his phone with a quiet sigh.',
+    line:()=>'简历投了一圈，工资和想的差一截。', lineLabel:'自语',
+    sound:'笔尖划纸、手机轻响、教室环境。BGM 低。',
+    mm:35, angle:'high', move:'static', light:'morning', fx:'—', post:'招聘信息后期叠加', negative:'resume and phone screen stay blank or blurred, no readable text'
+  },
+  {
+    id:'pain_grad_interview', act:2, actName:'痛点', subjects:['graduate','rival'], scene:'shop', weight:1.1,
+    actionCN:'社区维修店里，年轻学员坐在工作台前接受面试，双手放在膝盖上。老板老周翻着空白简历，抬头看了他一眼，语气平静。',
+    actionEN:'In a community repair shop, the young graduate sits across the workbench for an interview, hands on his knees. The shop owner, Lao Zhou, flips through a blank resume and looks up at him, calm and direct.',
+    line:()=>'会修，不等于会经营。', lineLabel:'对白',
+    sound:'店内风扇、纸张翻动。BGM 压低。',
+    mm:50, angle:'over', move:'static', light:'warmSoft', fx:'—', post:'简历文字后期叠加', negative:'resume must stay blank, no readable text'
+  },
+  {
+    id:'pain_grad_cost', act:2, actName:'痛点', subjects:['graduate'], scene:'campusNight', weight:1.05,
+    actionCN:'夜里，学员独自坐在培训教室的台灯下，手机上是一张空白费用清单，他用计算器加了几次，停下来，手指悬在屏幕上。',
+    actionEN:'At night, the graduate sits alone under a desk lamp in the training room, a blank cost sheet on his phone. He adds the numbers on a calculator a few times, stops, his finger hovering over the screen.',
+    line:()=>'房租、备货、装修，一算就不敢动。', lineLabel:'自语',
+    sound:'计算器按键、夜晚环境底噪。BGM 低。',
+    mm:50, angle:'high', move:'push', light:'night', fx:'—', post:'费用清单后期叠加', negative:'phone screen blurred, no readable numbers, no readable text'
+  },
+  {
+    id:'pain_grad_alone', act:2, actName:'痛点', subjects:['graduate'], scene:'campusNight', weight:1.0,
+    actionCN:'学员把工具一件件收回工具包，教室里只剩他一个人。他看了看墙上的空白公告板，又低头看着手机里空白的开店计划，停住。',
+    actionEN:'The graduate puts his tools back into the tool bag one by one; he is the only person left in the room. He glances at the blank noticeboard, then down at the blank store plan on his phone, and pauses.',
+    line:()=>'技术学会了，开店这条路没人带。', lineLabel:'自语',
+    sound:'工具碰撞、拉链声、夜晚环境。BGM 很轻。',
+    mm:50, angle:'eye', move:'static', light:'night', fx:'—', post:'开店计划文字后期叠加', negative:'phone screen blurred, no readable text'
+  },
+  {
+    id:'turn_grad_path', act:3, actName:'转折', subjects:['staffF','graduate'], scene:'campus', weight:1.15, keep:true,
+    actionCN:'培训教室的长桌两边，品牌渠道经理把一份空白开店资料推到学员面前，用手指着上面的几个分区。学员抬起头，第一次露出认真的表情。',
+    actionEN:'Across the long table in the training room, the brand channel manager slides a blank store-opening folder toward the graduate and points to several sections. The graduate looks up, serious for the first time.',
+    line:()=>'培训学校毕业后，可以自己开一家联想百应门店。', lineLabel:'对白',
+    sound:'资料袋轻响、教室环境。BGM 开始有支撑感。',
+    mm:50, angle:'eye', move:'static', light:'morning', fx:'—', post:'开店资料文字后期叠加', negative:'folder must stay blank, no readable text, uniform badge blank'
+  },
+  {
+    id:'turn_grad_support', act:3, actName:'转折', subjects:['staffF','graduate'], scene:'campus', weight:1.05,
+    actionCN:'渠道经理在桌上依次摆开五张空白卡片，每放一张就点一下；学员跟着看，边听边点头，肩膀慢慢放松。',
+    actionEN:'The channel manager lays out five blank cards on the table one by one, tapping each; the graduate follows her hand, nodding as he listens, his shoulders gradually relaxing.',
+    line:()=>'品牌、选址、供应链、技术、获客，开店这件事有人带你走。', lineLabel:'对白',
+    sound:'卡片落桌的轻响、轻 BGM。',
+    mm:35, angle:'high', move:'static', light:'morning', fx:'—', post:'五张卡片文字后期叠加', negative:'cards must stay blank, no readable text, no logo'
+  },
+  {
+    id:'value_grad_open', act:4, actName:'价值', subjects:['graduate'], scene:'shopUpgraded', weight:1.15,
+    actionCN:'新店开业前的清晨，年轻店主打开店门，按下灯开关，店内灯一盏盏亮起。他站在空白门头下，抬头看了一眼，轻轻呼出一口气。',
+    actionEN:'Early morning before opening, the young shop owner unlocks the door and flips the light switch; the lights come on one by one. He stands under the blank signboard, glances up and lets out a quiet breath.',
+    line:()=>'从学员到店主，这一步有人陪着走。', lineLabel:'对镜头',
+    sound:'卷帘门、灯开关、清晨街道。BGM 温暖上扬。',
+    mm:35, angle:'low', move:'pull', light:'morning', fx:'—', post:'门头文字/LOGO后期叠加', negative:'signboard blank, no readable text, no logo, no Apple Store look'
+  },
+  {
+    id:'value_grad_supply', act:4, actName:'价值', subjects:['graduate'], scene:'counter', weight:1.0,
+    actionCN:'店主打开一个刚拆封的备件箱，里面是整齐的通用配件。他拿起一件核对，又用手机扫码入库，屏幕保持模糊。',
+    actionEN:'The shop owner opens a newly unboxed parts box filled with neatly arranged generic components. He picks one up to check it, then scans it into inventory with his phone, the screen blurred.',
+    line:()=>'备件按需走正规渠道，不用自己压一仓库货。', lineLabel:'对镜头',
+    sound:'拆箱、扫码提示音、轻 BGM。',
+    mm:50, angle:'eye', move:'push', light:'warmSoft', fx:'CLICK!', post:'入库界面后期叠加', negative:'no readable labels or logos, parts clean and generic'
+  },
+  {
+    id:'value_grad_tech', act:4, actName:'价值', subjects:['graduate','staffM'], scene:'counter', weight:1.05,
+    actionCN:'店主把故障机转向镜头，平板里是总部工程师的视频画面（界面模糊）。他按对方提示操作，机器屏幕亮起，他松了口气，对屏幕点头。',
+    actionEN:'The shop owner turns the faulty laptop toward the camera; a headquarters engineer appears on a tablet video call, the UI blurred. He follows the instructions, the laptop screen lights up, he exhales and nods to the screen.',
+    line:()=>'遇到疑难机型，背后有工程师一起看。', lineLabel:'对白',
+    sound:'视频通话提示音、开机声、轻 BGM。',
+    mm:50, angle:'over', move:'static', light:'warmSoft', fx:'DING!', post:'视频通话界面后期叠加', negative:'no readable UI, engineer must match the same character asset, uniform badge blank'
+  },
+  {
+    id:'value_grad_customers', act:4, actName:'价值', subjects:['graduate','customerB'], scene:'shopUpgraded', weight:1.05,
+    actionCN:'风铃响，女顾客抱着电脑进门，店主从工作台后起身，拉开顾客椅，接过电脑。两人自然交流，不摆拍。',
+    actionEN:'The wind chime rings; a female customer walks in carrying a laptop. The shop owner rises from the workbench, pulls out the customer chair and takes the laptop. They talk naturally, not posed.',
+    line:()=>'线上有人问，店里有人来。', lineLabel:'对镜头',
+    sound:'风铃、街道环境、温暖 BGM。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'', negative:'laptop must stay closed and supported with both arms'
+  },
+  {
+    id:'end_grad_cta', act:5, actName:'收尾', subjects:['graduate'], scene:'shopUpgraded', weight:1.0, keep:true,
+    actionCN:'年轻店主站在店门口，身后是空白门头和整理好的店。他对镜头说完最后一句，停一秒，点头，不喊口号。',
+    actionEN:'The young shop owner stands at the store entrance with the blank signboard and tidy shop behind him. He finishes the last line to camera, pauses for a second, nods, no slogan shouting.',
+    line:()=>'想了解开店方案，评论区留「开店」。', lineLabel:'对镜头',
+    sound:'BGM 收尾、街道环境。',
+    mm:35, angle:'eye', move:'static', light:'warmDay', fx:'—', post:'结尾字幕后期添加', negative:'signboard blank, no readable text, no shouting, no exaggerated smile'
+  }
+);
 /* ============================================================
    生成引擎 A：解析 → 选卡 → 分配时长 → 组装镜头 → Prompt
    ============================================================ */
@@ -1374,6 +1502,7 @@ const ARCHETYPES = {
   mismatch:{ name:'错位擦肩', desc:'老板很努力，客户也就在门口，但客户被线上别家截走。', emotion:'期待 → 困惑 → 失落 → 主动求助 → 被看见' },
   comparison:{ name:'同行对比', desc:'不争论、不说教，用两个同行截然不同的经营状态代替说服。', emotion:'疲惫 → 羡慕 → 不甘 → 尝试 → 释然' },
   science:{ name:'科普解误区', desc:'用一个具体故障建立专业感，用三维示意讲清原理，再自然落到服务。', emotion:'疑惑 → 紧张 → 明白 → 放心 → 信任' },
+  employment:{ name:'培训就业创业', desc:'从培训学校毕业后的就业选择切入，讲清「先打工」与「自己开店」两条路，落到品牌开店支持。', emotion:'迷茫 → 焦虑 → 看到路径 → 有底 → 行动' },
   direct:{ name:'口播直给', desc:'不绕故事，CS或老板直接对镜头，把痛点和四件事讲清楚。', emotion:'共鸣 → 直接 → 有底 → 行动' }
 };
 
@@ -1423,6 +1552,13 @@ const PLAYBOOK = {
     3:['direct_benefit','turn_meeting','turn_uniform'],
     4:['value_orders','value_busy','$value','value_customer','value_supply'],
     5:['end_handshake','direct_cta']
+  },
+  employment:{
+    1:['hook_grad_choice','hook_grad_jobs'],
+    2:['pain_grad_interview','pain_grad_cost','pain_grad_alone'],
+    3:['turn_grad_path','turn_grad_support'],
+    4:['value_grad_open','value_grad_supply','value_grad_tech','value_grad_customers'],
+    5:['end_grad_cta']
   }
 };
 
@@ -1466,7 +1602,19 @@ const SHORT_LINES = {
   end_look:()=>'想了解，评论区留「品牌」。',
   end_handshake:()=>'后面有需要，随时找我。',
   sci_end:()=>'不建议自己拆，来品牌服务中心。',
-  direct_cta:()=>'想了解，评论区留「品牌」。'
+  direct_cta:()=>'想了解，评论区留「品牌」。',
+  hook_grad_choice:()=>'学完维修，只能去打工吗？',
+  hook_grad_jobs:()=>'简历投了一圈，工资不高。',
+  pain_grad_interview:()=>'会修，不等于会经营。',
+  pain_grad_cost:()=>'房租、备货，一算就不敢动。',
+  pain_grad_alone:()=>'技术会了，开店没人带。',
+  turn_grad_path:()=>'毕业后，可以自己开一家联想百应门店。',
+  turn_grad_support:()=>'品牌、选址、供货、技术，有人带。',
+  value_grad_open:()=>'从学员到店主，这一步有人陪。',
+  value_grad_supply:()=>'备件按需走正规渠道。',
+  value_grad_tech:()=>'疑难机型，有工程师一起看。',
+  value_grad_customers:()=>'线上有人问，店里有人来。',
+  end_grad_cta:()=>'想了解开店方案，评论区留「开店」。'
 };
 
 /* ---------- 文本工具 ---------- */
@@ -1487,7 +1635,7 @@ function pad2(n){ return String(n).padStart(2,'0'); }
 /* ---------- 解析 ---------- */
 function detectArchetype(text, fallback){
   if(fallback && fallback!=='auto') return fallback;
-  if(/清灰|散热|温度|噪音|原理|科普|误区|烫手|风扇/.test(text)) return 'science';
+  if(/培训学校|毕业生|毕业|学员|就业|找工作|职业学校|刚学完/.test(text)) return 'employment';
   if(/同行|隔壁|别人|对比|炫耀|老周/.test(text)) return 'comparison';
   if(/拍视频|短视频|发了|播放|没人看|刷不到|线上没|抖音没/.test(text)) return 'mismatch';
   if(/口播|直接说|直接讲|我是一名.{0,8}(CS|城市经理|渠道经理)|我是.{0,6}(CS|城市经理|渠道经理)/i.test(text)) return 'direct';
@@ -1528,6 +1676,7 @@ function detectAudience(text, fallback){
 }
 function detectBenefit(text, archetype, audience){
   if(archetype==='science') return BENEFITS.find(b=>b.id==='tech');
+  if(archetype==='employment') return BENEFITS.find(b=>b.id==='brand');
   if(audience.id==='multi' && /供应链|备件|配件/.test(text)) return BENEFITS.find(b=>b.id==='supply');
   const aliases = {
     brand:['品牌背书','品牌背书','五百强','示例集团'],
@@ -1554,6 +1703,7 @@ function detectBenefit(text, archetype, audience){
   return best;
 }
 function detectHero(text, fallback){
+  if(fallback==='graduate' || /培训学校|毕业生|毕业|学员|就业|刚学完/.test(text)) return CHARACTERS.graduate;
   if(fallback==='heroine' || /女老板|李姐/.test(text)) return CHARACTERS.heroine;
   if(fallback==='young' || /小陈|年轻师傅|27岁/.test(text)) return CHARACTERS.young;
   return CHARACTERS.hero;
@@ -1608,7 +1758,7 @@ function selectCards(ctx){
   const targets = ACT_TARGETS[ctx.duration] || ACT_TARGETS[60];
   const used = new Set();
   const out = [];
-  const noFill = (ctx.archetype==='science' || ctx.archetype==='direct');
+  const noFill = (ctx.archetype==='science' || ctx.archetype==='direct' || ctx.archetype==='employment');
   for(let act=1; act<=5; act++){
     const picked = [];
     let candidates = plan[act] || [];
@@ -1637,8 +1787,8 @@ function selectCards(ctx){
   }
   // 保证第一镜是钩子；CTA 只保留一个，并固定在最后
   out.sort((a,b)=>a.act-b.act);
-  const CTA_IDS = ['end_look','direct_cta','sci_end'];
-  const ctaId = ctx.archetype==='science' ? 'sci_end' : (ctx.archetype==='direct' ? 'direct_cta' : 'end_look');
+  const CTA_IDS = ['end_look','direct_cta','sci_end','end_grad_cta'];
+  const ctaId = ctx.archetype==='employment' ? 'end_grad_cta' : (ctx.archetype==='science' ? 'sci_end' : (ctx.archetype==='direct' ? 'direct_cta' : 'end_look'));
   const filtered = out.filter(c=>!CTA_IDS.includes(c.id));
   const ctaCard = CARDS.find(c=>c.id===ctaId);
   if(ctaCard) filtered.push(ctaCard);
@@ -1687,7 +1837,7 @@ function fitLines(shots, duration){
     const speaking = shots.map((s,i)=>s.line?i:-1).filter(i=>i>=0);
     const first = speaking[0], last = speaking[speaking.length-1];
     shots.forEach((s,i)=>{
-      if(!s.line || i===first || i===last) return;
+      if(!s.line || s.keep || i===first || i===last) return;
       const l=len(s);
       if(l>max){max=l; idx=i;}
     });
@@ -1707,6 +1857,18 @@ function resolveSubjects(card, ctx){
   return uniq(keys).map(k=>CHARACTERS[k]).filter(Boolean);
 }
 
+function buildNarrationCN(s){
+  const label = s.lineLabel || '—';
+  if(!s.line) return '旁白：本镜无台词，只保留环境音和BGM。';
+  const mode = label==='画外音' ? '画外旁白，人物不开口' : '由画面中的角色自然说出，口型同步';
+  return `旁白/台词（普通话，${label}）：「${s.line}」。${mode}，语气真实克制，不像广告播音。`;
+}
+function buildNarrationEN(s){
+  const label = s.lineLabel || '—';
+  if(!s.line) return ' Voiceover: none in this shot; ambient sound and music only.';
+  const mode = label==='画外音' ? 'off-screen narration, characters do not speak' : 'spoken naturally by the on-screen character with lip sync';
+  return ` Mandarin voiceover/dialogue (${label}): "${s.line}". ${mode}; restrained natural delivery, not an announcer.`;
+}
 function buildShot(card, ctx, timing){
   const chars = resolveSubjects(card, ctx);
   const subjectCN = chars.map(c=>String(c.cn).replace(/[。；;]\s*$/,'')).join('；');
@@ -1717,27 +1879,37 @@ function buildShot(card, ctx, timing){
   const move = MOVES[card.move]||MOVES.static;
   const light = LIGHTS[card.light]||LIGHTS.warmDay;
   const style = ctx.style;
+  const line = typeof card.line==='function' ? card.line(ctx) : (card.line||'');
+  const lineLabel = card.lineLabel||'—';
+  const lineShort = SHORT_LINES[card.id] ? SHORT_LINES[card.id](ctx) : '';
   const refCN = ctx.hasRef && chars.length ? `严格参考${chars.map((c,i)=>`@图${i+1}中${c.name}`).join('、')}的脸型、发型与服装，全片保持一致。` : '';
   const refEN = ctx.hasRef && chars.length ? `Use ${chars.map((c,i)=>`@图${i+1}`).join(' and ')} as strict character reference; keep the same face, hairstyle and outfit across all shots. ` : '';
   const blankBadge = chars.some(c=>c.key==='staffF'||c.key==='staffM') ? 'The uniform chest badge stays blank with no readable logo or text. ' : '';
-  const blankSign = ['value_store','end_pullout','end_handshake','direct_cta','pain_trust'].includes(card.id) ? 'Any signboard stays blank with no lettering. ' : '';
+  const blankSign = ['value_store','end_pullout','end_handshake','direct_cta','pain_trust','value_grad_open','end_grad_cta'].includes(card.id) ? 'Any signboard stays blank with no lettering. ' : '';
   const subjectBlock = subjectCN ? `${subjectCN}。` : '';
-  const promptCN = `${style.cn}。${refCN}${subjectBlock}${sceneCN}画面动作：${card.actionCN} 镜头：${card.mm}mm，${angle.cn}，${move.cn}。光线：${light.cn}。画质：4K，9:16竖屏，电影级细节，无文字、无logo、无水印。`;
-  const promptEN = `${style.en}. ${refEN}${subjectEN} Scene: ${sceneEN} Action: ${card.actionEN} Camera: ${card.mm}mm lens, ${angle.en}, ${move.en}. Lighting: ${light.en}. ${style.quality}. ${blankBadge}${blankSign}Vertical 9:16, 4K. No text, no letters, no subtitles, no logo, no watermark.`;
+  const basePromptCN = `${style.cn}。${refCN}${subjectBlock}${sceneCN}画面动作：${card.actionCN} 镜头：${card.mm}mm，${angle.cn}，${move.cn}。光线：${light.cn}。画质：4K，9:16竖屏，电影级细节，无文字、无logo、无水印。`;
+  const basePromptEN = `${style.en}. ${refEN}${subjectEN} Scene: ${sceneEN} Action: ${card.actionEN} Camera: ${card.mm}mm lens, ${angle.en}, ${move.en}. Lighting: ${light.en}. ${style.quality}. ${blankBadge}${blankSign}Vertical 9:16, 4K. No text, no letters, no subtitles, no logo, no watermark.`;
   const negative = `${BASE_NEG}, ${style.negative}${card.negative?', '+card.negative:''}`;
-  const line = typeof card.line==='function' ? card.line(ctx) : (card.line||'');
-  const lineShort = SHORT_LINES[card.id] ? SHORT_LINES[card.id](ctx) : '';
+  const promptCN = basePromptCN + buildNarrationCN({line, lineLabel});
+  const promptEN = basePromptEN + buildNarrationEN({line, lineLabel});
   return {
     ...card, ...timing, chars, subjectCN, subjectEN, sceneCN, sceneEN,
-    line, lineShort, lineLabel:card.lineLabel||'—',
+    line, lineShort, lineLabel,
     cameraCN:`${card.mm}mm · ${angle.cn} · ${move.cn}`,
     cameraEN:`${card.mm}mm lens, ${angle.en}, ${move.en}`,
-    promptCN, promptEN, negative
+    basePromptCN, basePromptEN, promptCN, promptEN, negative
   };
+}
+function refreshNarration(shots){
+  shots.forEach(s=>{
+    s.promptCN = (s.basePromptCN||'') + buildNarrationCN(s);
+    s.promptEN = (s.basePromptEN||'') + buildNarrationEN(s);
+  });
 }
 
 /* ---------- 创意简报 ---------- */
 function makeMainTitle(ctx){
+  if(ctx.archetype==='employment') return '学完电脑维修，只能去打工吗？';
   if(ctx.archetype==='science') return '电脑又吵又烫，先别急着换';
   if(ctx.archetype==='comparison') return '同样修电脑，为什么隔壁店总有人进门？';
   if(ctx.archetype==='mismatch') return '拍了一上午视频，为什么附近的人还是刷不到？';
@@ -1748,6 +1920,7 @@ function makeMainTitle(ctx){
   return '一个人守店，最难的不是手艺';
 }
 function makeTheme(ctx){
+  if(ctx.archetype==='employment') return `从${ctx.audience.name}最真实的毕业选择切入：继续找工作，还是自己开一家店；不夸大收入，只把开店路径和品牌支持讲清楚。`;
   if(ctx.archetype==='mismatch') return `用一次“客户就在门口、却被线上别家截走”的擦肩，把${ctx.audience.name}最熟悉的无力感拍出来；不责怪老板，只让「${ctx.benefit.name}」成为被看见的那一步。`;
   if(ctx.archetype==='comparison') return `不争论、不说教，用两个${ctx.audience.name}的经营状态做对照：一个越忙越薄，一个开始有系统；让观众自己得出结论。`;
   if(ctx.archetype==='science') return `先用一个具体故障建立专业感，再用三维示意讲清“不是机器老了，是散热被堵住”，最后自然落到标准化服务。`;
@@ -1755,6 +1928,7 @@ function makeTheme(ctx){
   return `用「${ctx.benefit.pain.split('/')[0].trim()}」把${ctx.audience.name}的日常拍出来：先让他在故事里看到自己，再让「${ctx.benefit.name}」成为那条具体的出路。`;
 }
 function makeConflict(ctx){
+  if(ctx.archetype==='employment') return '技术学会了，但就业选择窄、开店门槛看不清；想自己干，又缺品牌、缺客源、缺供应链，最后只能先去打工。';
   if(ctx.archetype==='science') return `客户以为“又吵又烫”是电脑老了，第一反应是换机；真正的矛盾是散热被灰尘堵住，却没人把原理讲明白。`;
   if(ctx.archetype==='comparison') return `同样的手艺、同样的街，隔壁同行开始有系统，主角还在靠一个人硬扛；差距不在技术，在经营方式。`;
   if(ctx.archetype==='mismatch') return `主角认真拍视频、认真守店，客户也走到了门口，却在手机上被别家截走；努力和结果之间隔着一层“线上看不见”。`;
@@ -1762,6 +1936,7 @@ function makeConflict(ctx){
   return `${ctx.audience.name}技术不差、人也不懒，但客流、备件、技术、人员总有一头顾不过来；一个人扛得越久，越不敢停下来。`;
 }
 function makePayoff(ctx){
+  if(ctx.archetype==='employment') return '培训学校毕业后，可以在品牌支持下自己开一家联想百应门店；品牌、选址、供应链、技术、获客都有对应支持，具体政策以品牌方最新文件为准。';
   return `${ctx.benefit.core} ${ctx.benefit.line}`;
 }
 function makeEmotion(ctx){
@@ -1804,6 +1979,7 @@ function buildProject(input){
   const shots = cards.map(c=>buildShot(c, ctx, {start:0,duration:0,end:0}));
   allocateDurations(shots, ctx.duration);
   const lineInfo = fitLines(shots, ctx.duration);
+  refreshNarration(shots);
   const brief = buildBrief(ctx, shots, lineInfo);
   return { ctx, shots, brief, lineInfo, generatedAt:new Date().toISOString() };
 }
@@ -1873,7 +2049,8 @@ const AUDIENCE_TITLES = {
   single:['单店老板们，一个人守店，最怕的是不是没客人？','你们说，一个人守店，最难的是手艺还是经营？'],
   master:['维修师傅们，技术再好，一个人能扛多少种机型？','你们说，手艺好的人，为什么反而更难把店做大？'],
   cross:['想转行的朋友们，店还能再开几年，你们想过吗？','你们说，跨界开店，最怕的是不是没人带？'],
-  multi:['多店老板们，三家店管不过来，你们是不是也在救火？','你们说，店越开越多，为什么人越来越累？']
+  multi:['多店老板们，三家店管不过来，你们是不是也在救火？','你们说，店越开越多，为什么人越来越累？'],
+  graduate:['培训学校毕业的同学们，学完技术，下一步你们打算去哪？','你们说，刚毕业是先找工作，还是自己开一家店？']
 };
 
 const ARCHETYPE_TITLES = {
@@ -1881,7 +2058,8 @@ const ARCHETYPE_TITLES = {
   mismatch:['客户都走到门口了，为什么还会转身去别家？','你们认真拍的视频，为什么附近的人刷不到？'],
   comparison:['同样的手艺、同样的街，为什么结果不一样？','同行们，你有没有算过，自己到底在为什么忙？'],
   science:['电脑又吵又烫，你们第一反应是不是换新机？','风扇一直响，真的只是电脑老了吗？'],
-  direct:['同行们，开维修店这四件事，你们是不是都在自己扛？','你们说，品牌、获客、备件、技术，哪一件最头疼？']
+  direct:['同行们，开维修店这四件事，你们是不是都在自己扛？','你们说，品牌、获客、备件、技术，哪一件最头疼？'],
+  employment:['培训学校毕业的同学们，学完技术，你们只能去打工吗？','同学们，电脑维修学完了，你们想不想自己开一家店？','刚毕业的同学们，先找工作还是自己开店，你们想过吗？','同行们，培训学校毕业后，除了打工还有没有别的路？']
 };
 
 const GENERIC_TITLES = [
@@ -1935,6 +2113,7 @@ const COVERS = {
 };
 function generateCover(ctx){
   let c = COVERS[ctx.benefit.id] || COVERS.online;
+  if(ctx.archetype==='employment') c = {main:'毕业之后',sub:'不止打工一条路'};
   if(ctx.archetype==='science') c = {main:'又吵又烫',sub:'先别急着换电脑'};
   if(ctx.archetype==='comparison') c = {main:'同样修电脑',sub:'为什么结果不一样'};
   if(ctx.archetype==='mismatch') c = {main:'客户在门口',sub:'却被线上截走'};
@@ -2089,6 +2268,8 @@ function runCompliance(project, extras){
 
 /* ---------- 发布建议 ---------- */
 function buildPublish(ctx, titles, cover){
+  const isEmployment = ctx.archetype==='employment';
+  const commentCTA = isEmployment ? '想了解开店方案，评论区留「开店」，我发你一份开店支持清单。' : '想了解怎么加入示例品牌，评论区留「品牌」，我发你一份门店经营测算。';
   const timeMap = {
     douyin:'首选 10:00-11:00（爆款集中），次选 17:00-18:00，日常 12:00-14:00；避开 5:00-9:00。',
     channels:'首选 12:00-14:00 或 20:00-22:00（熟人社交时段），次选 10:00-11:00。',
@@ -2101,12 +2282,12 @@ function buildPublish(ctx, titles, cover){
     hashtags:ctx.platform.tags,
     fixedTags:'#示例品牌#电脑维修',
     time:timeMap[ctx.platformId]||timeMap.douyin,
-    commentCTA:'想了解怎么加入示例品牌，评论区留「品牌」，我发你一份门店经营测算。',
+    commentCTA,
     postNotes:[
       '发布前把门头、工服、手机屏幕、尾板文字全部后期叠加，不要让AI生成中文。',
       '同一角色先用定妆图固定，再逐镜图生视频；每镜生成 2-3 条选最佳。',
       '剪辑节奏：钩子 0-3 秒必须出现人物或冲突；每 3-5 秒换一次景别；结尾留 2 秒尾板。',
-      '评论区置顶：想了解怎么加入示例品牌，评论区留「品牌」。',
+      isEmployment ? '评论区置顶：想了解开店方案，评论区留「开店」。' : '评论区置顶：想了解怎么加入示例品牌，评论区留「品牌」。',
       '数据回看：发布后 2 小时看 3 秒留存，24 小时看加微/私信，7 天看线索质量。'
     ]
   };
@@ -2120,7 +2301,7 @@ function buildDoubaoPackage(project, extras, pure){
   }
   const lines = [];
   lines.push(`【豆包整包｜${brief.title}】`);
-  lines.push('使用方式：请按镜号逐条生成，每次只生成一镜，不要把多个镜头合并。每镜生成2-3条，选动作最自然、手部最稳的一条。所有文字、LOGO、手机屏幕内容一律后期叠加，不要让AI生成。');
+  lines.push('使用方式：请按镜号逐条生成，每次只生成一镜，不要把多个镜头合并。每镜生成2-3条，选动作最自然、手部最稳的一条。每镜 Prompt 已包含画面与旁白/台词；若模型不支持中文人声，请只保留画面，把旁白单独用 TTS 生成。所有文字、LOGO、手机屏幕内容一律后期叠加，不要让AI生成。');
   lines.push('');
   lines.push('【全片设定】');
   lines.push(`${ctx.duration}秒｜${ctx.platform.ratio}｜4K｜${ctx.style.name}`);
@@ -2199,7 +2380,7 @@ function buildMarkdown(project, extras){
     lines.push(`### 镜${pad2(i+1)}｜${fmtTime(s.start)}–${fmtTime(s.end)}s｜${s.cameraCN}`);
     lines.push('');
     lines.push(`- **画面**：${s.actionCN}`);
-    lines.push(`- **台词**：${s.line?`${s.lineLabel}：${s.line}`:'—（此镜留白，靠画面和音效推进）'}`);
+    lines.push(`- **台词/旁白**：${s.line?`${s.lineLabel}：${s.line}`:'—（此镜留白，靠画面和音效推进）'}`);
     lines.push(`- **音效/BGM**：${s.sound}`);
     lines.push(`- **字效**：${s.fx}`);
     if(s.post) lines.push(`- **后期叠加**：${s.post}`);
@@ -2322,7 +2503,7 @@ function buildJSON(project, extras){
     assets:extras.assets,
     publish:{
       titles:extras.titles, cover:extras.cover, hashtags:project.ctx.platform.tags,
-      commentCTA:'想了解怎么加入示例品牌，评论区留「品牌」，我发你一份门店经营测算。'
+      commentCTA:project.ctx.archetype==='employment' ? '想了解开店方案，评论区留「开店」，我发你一份开店支持清单。' : '想了解怎么加入示例品牌，评论区留「品牌」，我发你一份门店经营测算。'
     },
     compliance:extras.compliance
   }, null, 2);
@@ -2449,7 +2630,7 @@ function renderSimple(){
   const html = `
     <div class="card">
       <div class="card-title"><h3><span class="dot"></span>生成结果</h3><span class="pill cyan">${ctx.duration}秒 · ${ctx.platform.name} · ${ctx.style.name}</span></div>
-      <p class="muted" style="font-size:11.5px;line-height:1.7;margin:0 0 11px">下面每一段都可以直接粘到豆包 / 即梦 / 可灵 / 海螺。建议按镜号逐条生成，每次只生成一镜。</p>
+      <p class="muted" style="font-size:11.5px;line-height:1.7;margin:0 0 11px">下面每一段都已包含画面、镜头和旁白/台词，可以直接粘到豆包 / 即梦 / 可灵 / 海螺。建议按镜号逐条生成，每次只生成一镜。</p>
       <div class="flex flex-wrap">
         <button class="btn dark" data-copy-pure="1">一键复制全部 Prompt</button>
         <button class="btn" data-copy-doubao="1">复制带说明的整包</button>
@@ -2466,8 +2647,9 @@ function renderSimple(){
     <div class="card">
       <div class="card-title"><h3><span class="dot"></span>怎么用</h3></div>
       <ol class="simple-steps">
-        <li>复制 Prompt，粘到豆包 / 即梦 / 可灵 / 海螺。</li>
+        <li>复制 Prompt，粘到豆包 / 即梦 / 可灵 / 海螺；Prompt 已包含旁白/台词。</li>
         <li>每次只生成一镜，不要把所有镜头合在一起。</li>
+        <li>如果视频模型不支持中文人声，关闭模型人声，用剪映/TTS 单独生成旁白。</li>
         <li>每镜生成 2-3 条，选动作最自然的一条。</li>
         <li>门头、工服、LOGO、手机屏幕文字后期叠加。</li>
       </ol>
@@ -3144,10 +3326,26 @@ function bindEvents(){
     generate();
   });
   $('#exampleChips').addEventListener('click', e=>{
+    const noteBtn = e.target.closest('[data-example-note]');
+    if(noteBtn){
+      const note = $('#exampleNote'+noteBtn.dataset.exampleNote);
+      if(note){
+        const open = note.hidden;
+        note.hidden = !open;
+        noteBtn.setAttribute('aria-expanded', String(open));
+        noteBtn.textContent = open ? '收起说明' : '展开说明';
+      }
+      return;
+    }
     const b = e.target.closest('[data-example]');
     if(!b) return;
     $('#idea').value = EXAMPLES[parseInt(b.dataset.example,10)] || '';
     updateIdeaCount();
+    if(b.dataset.example==='2'){
+      const note = $('#exampleNote2');
+      const noteBtn2 = $('[data-example-note="2"]');
+      if(note){ note.hidden=false; noteBtn2.setAttribute('aria-expanded','true'); noteBtn2.textContent='收起说明'; }
+    }
     $('#idea').focus();
     toast('示例已填入，点「生成」');
   });
