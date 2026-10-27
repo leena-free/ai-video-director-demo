@@ -391,6 +391,20 @@ textarea#idea::placeholder{color:#A6ADBA}
 .hidden{display:none!important}
 kbd{font-family:var(--mono);font-size:9px;background:#F0EDE5;border:1px solid #DDD6C7;border-bottom-width:2px;border-radius:4px;padding:1px 4px;color:#5A6474}
 
+/* ---------- Simple mode ---------- */
+body.simple-mode .tabs{display:none!important}
+body.simple-mode .panel{display:none!important}
+body.simple-mode #panel-simple{display:block!important}
+body.simple-mode .result-head .head-actions{display:none}
+body.simple-mode .result-sub{display:none}
+body.simple-mode .capabilities,body.simple-mode .flow{display:none}
+body.simple-mode .advanced-only{display:none!important}
+body.simple-mode .composer{padding-top:20px}
+.simple-shot{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 17px;margin-bottom:12px;box-shadow:var(--shadow-sm)}
+.simple-shot-head{font-family:var(--mono);font-size:10.5px;font-weight:800;color:var(--cyan);margin-bottom:8px;letter-spacing:.2px}
+.simple-prompt{font-size:12.5px;line-height:1.85;color:#2D3847;white-space:pre-wrap;word-break:break-word}
+.simple-actions{margin-top:10px;display:flex;justify-content:flex-end}
+.simple-steps{margin:0;padding-left:20px;font-size:12px;line-height:1.9;color:#3B4656}
 @media (max-width:1180px){
   .layout{grid-template-columns:350px minmax(0,1fr)}
   .stage{padding:22px 20px 70px}
@@ -422,7 +436,7 @@ kbd{font-family:var(--mono);font-size:9px;background:#F0EDE5;border:1px solid #D
   .prompt-box{max-height:none}
 }
 </style>
-</head><body>
+</head><body class="simple-mode">
 <div class="topbar">
   <div class="brand">
     <div class="brand-mark">演示</div>
@@ -452,7 +466,7 @@ kbd{font-family:var(--mono);font-size:9px;background:#F0EDE5;border:1px solid #D
 
 <div class="layout">
   <aside class="composer">
-    <div class="eyebrow"><span class="num">01</span> 说人话</div>
+    <div class="eyebrow"><span class="num">01</span> 说人话 <button class="chip" id="modeToggle" style="margin-left:auto">高级模式</button></div>
     <h1>把大白话，变成 AI 视频提示词</h1>
     <p class="lead">不用懂 Prompt，不用会分镜。把你想拍的事、想给谁看、想让他做什么，像跟同事聊天一样写下来。</p>
     <div class="input-wrap">
@@ -470,7 +484,7 @@ kbd{font-family:var(--mono);font-size:9px;background:#F0EDE5;border:1px solid #D
     <div class="hr"></div>
     <div class="eyebrow"><span class="num">02</span> 定方向 <span style="font-weight:500;letter-spacing:0;color:#98A0AD;text-transform:none;font-size:10px;margin-left:4px">不确定就选自动</span></div>
     <div class="field-grid">
-      <div class="field">
+      <div class="field advanced-only">
         <label for="fAudience">目标人群</label>
         <select id="fAudience">
           <option value="auto">自动判断</option>
@@ -480,7 +494,7 @@ kbd{font-family:var(--mono);font-size:9px;background:#F0EDE5;border:1px solid #D
           <option value="multi">多店老板</option>
         </select>
       </div>
-      <div class="field">
+      <div class="field advanced-only">
         <label for="fArchetype">叙事模型</label>
         <select id="fArchetype">
           <option value="auto">自动判断</option>
@@ -518,7 +532,7 @@ kbd{font-family:var(--mono);font-size:9px;background:#F0EDE5;border:1px solid #D
           <option value="kuaishou">快手</option>
         </select>
       </div>
-      <div class="field">
+      <div class="field advanced-only">
         <label for="fHero">主角设定</label>
         <select id="fHero">
           <option value="hero">老王 · 42岁男老板</option>
@@ -526,17 +540,17 @@ kbd{font-family:var(--mono);font-size:9px;background:#F0EDE5;border:1px solid #D
           <option value="young">小陈 · 27岁维修师傅</option>
         </select>
       </div>
-      <div class="field">
+      <div class="field advanced-only">
         <label for="fCity">城市（可选）</label>
         <input id="fCity" type="text" placeholder="如：武汉" maxlength="12" />
       </div>
-      <div class="field">
+      <div class="field advanced-only">
         <label for="fShop">门店名（可选）</label>
         <input id="fShop" type="text" placeholder="不填用「社区维修店」" maxlength="20" />
       </div>
     </div>
 
-    <div class="switch-row">
+    <div class="switch-row advanced-only">
       <div class="txt"><b>已有角色参考图</b>开启后，分镜提示词会要求 @图1 严格保持一致</div>
       <label class="switch"><input type="checkbox" id="fRef" /><span class="slider"></span></label>
     </div>
@@ -611,7 +625,8 @@ kbd{font-family:var(--mono);font-size:9px;background:#F0EDE5;border:1px solid #D
         <button class="tab" data-tab="kb">知识库</button>
       </div>
 
-      <div class="panel active" id="panel-brief"></div>
+      <div class="panel" id="panel-simple"></div>
+      <div class="panel" id="panel-brief"></div>
       <div class="panel" id="panel-script"></div>
       <div class="panel" id="panel-shots"></div>
       <div class="panel" id="panel-assets"></div>
@@ -2420,7 +2435,45 @@ function renderAll(){
   renderPublish();
   renderCheck();
   renderKB();
-  setTab(STATE.activeTab);
+  renderSimple();
+  if(document.body.classList.contains('simple-mode')){
+    $$('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-simple'));
+  }else{
+    setTab(STATE.activeTab==='simple'?'brief':STATE.activeTab);
+  }
+}
+
+function renderSimple(){
+  if(!STATE.project){ $('#panel-simple').innerHTML=''; return; }
+  const {ctx, shots} = STATE.project;
+  const html = `
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>生成结果</h3><span class="pill cyan">${ctx.duration}秒 · ${ctx.platform.name} · ${ctx.style.name}</span></div>
+      <p class="muted" style="font-size:11.5px;line-height:1.7;margin:0 0 11px">下面每一段都可以直接粘到豆包 / 即梦 / 可灵 / 海螺。建议按镜号逐条生成，每次只生成一镜。</p>
+      <div class="flex flex-wrap">
+        <button class="btn dark" data-copy-pure="1">一键复制全部 Prompt</button>
+        <button class="btn" data-copy-doubao="1">复制带说明的整包</button>
+        <button class="btn" data-variant="1">换一版</button>
+      </div>
+    </div>
+    ${shots.map((s,i)=>`
+      <div class="simple-shot">
+        <div class="simple-shot-head">镜${pad2(i+1)} · ${fmtTime(s.start)}–${fmtTime(s.end)}s · ${esc(s.cameraCN)}</div>
+        <div class="simple-prompt">${esc(s.promptCN)}</div>
+        <div class="simple-actions"><button class="btn sm" data-copy-shot="${esc(s.id)}" data-lang="zh">复制这一镜</button></div>
+      </div>
+    `).join('')}
+    <div class="card">
+      <div class="card-title"><h3><span class="dot"></span>怎么用</h3></div>
+      <ol class="simple-steps">
+        <li>复制 Prompt，粘到豆包 / 即梦 / 可灵 / 海螺。</li>
+        <li>每次只生成一镜，不要把所有镜头合在一起。</li>
+        <li>每镜生成 2-3 条，选动作最自然的一条。</li>
+        <li>门头、工服、LOGO、手机屏幕文字后期叠加。</li>
+      </ol>
+    </div>
+  `;
+  $('#panel-simple').innerHTML = html;
 }
 
 function renderHeader(){
@@ -3012,6 +3065,15 @@ function saveProject(){
   renderProjectList();
   toast('已保存到本机');
 }
+function nextVariant(){
+  if(!$('#idea').value.trim()){ toast('先写一句你想拍什么'); return; }
+  const cur = readInputs();
+  if(cur.idea !== LAST_IDEA){ VARIANT = 0; LAST_IDEA = cur.idea; }
+  VARIANT++;
+  generate();
+  toast('已换一版');
+}
+
 function renderProjectList(){
   const list = loadProjects();
   const box = $('#projectList');
@@ -3108,6 +3170,8 @@ function bindEvents(){
       if(s) copyText(shotCopy.dataset.lang==='en'?s.promptEN:s.promptCN);
       return;
     }
+    const variant = e.target.closest('[data-variant]');
+    if(variant){ nextVariant(); return; }
     const copyDoubao = e.target.closest('[data-copy-doubao]');
     if(copyDoubao){ if(STATE.project) copyText(buildDoubaoPackage(STATE.project, STATE.extras, false)); return; }
     const copyPure = e.target.closest('[data-copy-pure]');
@@ -3157,13 +3221,17 @@ function bindEvents(){
     toast('JSON 已下载');
   });
   $('#saveProjectBtn').addEventListener('click', saveProject);
-  $('#variantBtn').addEventListener('click', ()=>{
-    if(!$('#idea').value.trim()){ toast('先写一句你想拍什么'); return; }
-    const cur = readInputs();
-    if(cur.idea !== LAST_IDEA){ VARIANT = 0; LAST_IDEA = cur.idea; }
-    VARIANT++;
-    generate();
-    toast('已换一版');
+  $('#variantBtn').addEventListener('click', nextVariant);
+  $('#modeToggle').addEventListener('click', ()=>{
+    const simple = !document.body.classList.contains('simple-mode');
+    document.body.classList.toggle('simple-mode', simple);
+    $('#modeToggle').textContent = simple ? '高级模式' : '简单模式';
+    if(simple){
+      if(STATE.project) renderSimple();
+      $$('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-simple'));
+    }else{
+      setTab('brief');
+    }
   });
   $('#printBtn').addEventListener('click', ()=>window.print());
   $('#projectsBtn').addEventListener('click', ()=>{ renderProjectList(); openModal('projectsModal'); });
